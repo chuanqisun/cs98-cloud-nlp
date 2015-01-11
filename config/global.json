@@ -1,0 +1,11 @@
+{
+    "applications": {
+        "Dartmouth Course Picker": {
+            "applicationId": "dpfdUhCXPPBflubK1bKkI8eeUAgyLf8FQZ86h1bq", 
+            "masterKey": "HJLJR3GhjWv0N9QdQ7LZBFfD6IfyJb7WgEjIB4Oi"
+        }, 
+        "_default": {
+            "link": "Dartmouth Course Picker"
+        }
+    }
+}

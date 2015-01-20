@@ -1,6 +1,11 @@
 #!/bin/sh
-rm outtemp.txt
+
+####################################################
+# use base_urls to get urls of all the courses
+####################################################
 touch outtemp.txt
+rm outtemp.txt
+
 headcut=http://dartmouth.smartcatalogiq.com/
 for line in `cat ./base_urls`; do
 	curl -s $line > temp.html

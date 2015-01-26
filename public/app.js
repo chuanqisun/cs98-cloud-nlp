@@ -6,12 +6,13 @@ require.config({
     "model": "lib/modules/model/main-model",
     "view": "lib/modules/view/main-view",
     "controller": "lib/modules/controller/main-controller",
-    "data-service": "lib/modules/model/data-service"
+    "service": "lib/modules/service/data-service"
   }
 });
 
-require(['model', 'view', 'controller'], function(model, view, controller) {  
+require(['model', 'view', 'controller', 'service'], function(model, view, controller, service) { 
+  service.init(); 
   model.init();
-  view.render();
+  view.init();
   controller.init();
 });

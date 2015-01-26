@@ -1,10 +1,10 @@
-define(['jquery', 'data-service'], function(jQuery, dataService) {
+define(['jquery', 'model'], function(jQuery, model) {
   var init = function() {
     $("#concept-button").click(function() {
-      dataService.getConceptsForCourse("COSC 1");
+      model.insertCourse("COSC 1");
   	});
   	$("#course-button").click(function() {
-  	  dataService.getCoursesForConcept("Photography");
+  	  model.insertConcept("Photography");
   	});
   };
   return {

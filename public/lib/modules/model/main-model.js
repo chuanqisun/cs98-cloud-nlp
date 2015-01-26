@@ -1,8 +1,19 @@
-define(['parse'], function() {
+define(['service'], function(service) {
   var init = function() {
-    Parse.initialize("dpfdUhCXPPBflubK1bKkI8eeUAgyLf8FQZ86h1bq", "1Ac6b4DiROlm94KJJdyDuRAUS0oOmN4r4oqxouLt");
+  	// prepare data structure for nodes and edges
   };
+
+  var insertConcept = function(concept) {
+  	  service.getCoursesForConcept(concept);
+  };
+
+  var insertCourse = function(course) {
+      service.getConceptsForCourse(course);
+  }
+
   return {
-    init: init
+    init: init,
+    insertConcept: insertConcept,
+    insertCourse: insertCourse
   };
 });

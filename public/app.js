@@ -6,7 +6,8 @@ require.config({
     "model": "lib/modules/model/main-model",
     "view": "lib/modules/view/main-view",
     "controller": "lib/modules/controller/main-controller",
-    "service": "lib/modules/service/data-service"
+    "service": "lib/modules/service/data-service",
+    "event": "lib/modules/service/event-service"
   }
 });
 

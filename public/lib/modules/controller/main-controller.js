@@ -1,10 +1,10 @@
 define(['jquery', 'model'], function(jQuery, model) {
   var init = function() {
     $("#concept-button").click(function() {
-      model.insertCourse("COSC 1");
+      model.insertConcept("Photography");
   	});
   	$("#course-button").click(function() {
-  	  model.insertConcept("Photography");
+  	  model.insertCoursesForConcept("Photography");
   	});
   };
   return {

@@ -25,6 +25,7 @@ define(['service', 'event'], function(service, event) {
       this.nodeDict[node.name] = index;
       this.currentIndex++;
       this.nodes.push(node);
+
       return index;
     }
     return -1;
@@ -55,25 +56,27 @@ define(['service', 'event'], function(service, event) {
   // Only to be called at beginning
   var insertConcept = function(concept) {
     node = new Node(concept, 'concept');
-    graph.insertNode(node);
-
-    // send model update message to view
-    event.emit(event.modelUpdateEvent);
+    if (graph.insertNode(node) >= 0) {
+      // send model update message to view
+      event.emit(event.modelAddNodesEvent, {nodes:[node], links: []});
+    }
   }
 
   // Only to be called at beginning
   var insertCourse = function(course) {
     node = new Node(course, 'course');
-    graph.insertNode(node);
-
-    // send model update message to view
-    event.emit(event.modelUpdateEvent);
+    if (graph.insertNode(node) >= 0) {
+      // send model update message to view
+      event.emit(event.modelAddNodesEvent, {nodes:[node], links: []});
+    }
   }
 
   var insertCoursesForConcept = function(concept) {
 	  var promise = service.getCoursesForConcept(concept);
     
-    var node, link;
+    var node, link, nodes, links;
+    updateNodes = [];
+    updateLinks = [];
     promise.then(function(results) {
       var sourceId = graph.getIndex(concept);
 
@@ -82,13 +85,15 @@ define(['service', 'event'], function(service, event) {
         node = new Node(results[i].get('code'), 'course');
         var targetId = graph.insertNode(node);
         if (targetId >= 0) {
+          updateNodes.push(node);
           link = new Link(sourceId, targetId, 1);
           graph.insertLink(link);
+          updateLinks.push(link);
         }
       }
 
       //send model update message to view
-      event.emit(event.modelUpdateEvent);
+      event.emit(event.modelAddNodesEvent, {nodes:updateNodes, links:updateLinks});
 
     }, function(error) {
       alert("Error: " + error.code + " " + error.message);

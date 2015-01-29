@@ -39,21 +39,11 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
 	// redraw force layout
 	function redraw() {
 
-	  var graph = model.getGraph();
+
 
 	  // D3 can't handle multiple nodes insertion. must do it one by one.
 	  // Hence, need to get delta nodes from model and add them one by one.
 	  // add new function in main-model to handle delta change
-
-	  while (nodes.length > 0) {
-	  	nodes.pop();
-	  }
-	 
-	  for (var i = 0; i < graph.nodes.length; i++) {
-	  	graph.nodes[i] = {};
-	  	nodes.push(graph.nodes[i]);
-	  }
-
 	  link = link.data(links);
 
 	  link.enter().insert("line", ".node")
@@ -85,9 +75,16 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
 	  force.start();
 	}
 
-	event.listen( event.modelUpdateEvent , function() { 
-		redraw();
+	event.listen(event.modelAddNodesEvent, function(e, data) { 
+		// show data 
+		for (var i = 0; i < data.nodes.length; i++){
+			nodes.push(data.nodes[i]);
+		}
 
+		for (var i = 0; i < data.links.length; i++){
+			links.push(data.links[i]);
+		}
+		redraw();
 	}); 
 
   };

@@ -6,6 +6,9 @@ define(['jquery', 'model'], function(jQuery, model) {
   	$("#course-button").click(function() {
   	  model.insertCoursesForConcept("Photography");
   	});
+    $("#more-button").click(function() {
+      model.insertConceptsForCourse("SART 30");
+    });
   };
   return {
     init: init

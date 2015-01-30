@@ -51,8 +51,6 @@ define(['service', 'event'], function(service, event) {
   }
 
 
-  // Model updates
-
   // Only to be called at beginning
   var insertConcept = function(concept) {
     node = new Node(concept, 'concept');
@@ -101,16 +99,32 @@ define(['service', 'event'], function(service, event) {
   };
 
   var insertConceptsForCourse = function(course) {
-      var promise = service.getConceptsForCourse(course);
-      promise.then(function(results) {
-        alert("Successfully retrieved " + results.length + " courses.");
-        // Do something with the returned Parse.Object values
-        for (var i = 0; i < results.length; i++) { 
-          var object = results[i];
+    var promise = service.getConceptsForCourse(course);
+    
+    var node, link, nodes, links;
+    updateNodes = [];
+    updateLinks = [];
+    promise.then(function(results) {
+      var sourceId = graph.getIndex(course);
+
+      // insert course nodes
+      for (var i = 0; i < results.length; i++) {
+        node = new Node(results[i].get('text'), 'concept');
+        var targetId = graph.insertNode(node);
+        if (targetId >= 0) {
+          updateNodes.push(node);
+          link = new Link(sourceId, targetId, 1);
+          graph.insertLink(link);
+          updateLinks.push(link);
         }
-      }, function(error) {
-        alert("Error: " + error.code + " " + error.message);
-      });
+      }
+
+      //send model update message to view
+      event.emit(event.modelAddNodesEvent, {nodes:updateNodes, links:updateLinks});
+
+    }, function(error) {
+      alert("Error: " + error.code + " " + error.message);
+    });
   };
 
   return {

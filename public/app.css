@@ -2,7 +2,16 @@
   stroke: #000;
 }
 
-.node {
-  fill: #ccc;
+.node.concept circle {
+  fill: yellow;
   stroke: #000;
+}
+
+.node.course circle {
+  fill: green;
+  stroke: #000;
+}
+
+.node text {
+  font: 9px helvetica;
 }

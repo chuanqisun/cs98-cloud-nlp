@@ -1,138 +1,70 @@
 define(['service', 'event'], function(service, event) {
 
-  var graph = {};
+  var graph;
 
   var getGraph = function() {
     return graph;
   }
 
   var init = function() {
-  	// prepare data structure for nodes and links
-    graph = new Graph();
+    graph = {};
   };
 
-  // Data Structures
-  var Graph = function() {
-    this.nodes = [];
-    this.links = [];
-    this.nodeDict = new Array(); // keep track of the indices of all nodes
-    this.currentIndex = 0;
-  }
-
-  Graph.prototype.insertNode = function(node) {
-    if(this.nodeDict[node.name] === undefined){
-      var index = this.currentIndex;
-      this.nodeDict[node.name] = index;
-      this.currentIndex++;
-      this.nodes.push(node);
-
-      return index;
-    }
-    return -1;
-  }
-
-  Graph.prototype.insertLink = function(link) {
-    this.links.push(link);
-  }
-
-  Graph.prototype.getIndex = function(key) {
-    return this.nodeDict[key];
-  }
-
-  var Node = function(name, group) {
+  var Node = function(name, children, group) {
     this.name = name;
+    this.children = children;
     this.group = group;
   }
 
-  var Link = function(source, target, value) {
-    this.source = source;
-    this.target = target;
-    this.value = value;
+  var addCourse = function(course) {
+    var node = new Node(course, null, 'course');
+    var child;
+    // temporary solution
+    graph = node;
+
+    //send model update message to view
+    event.emit(event.modelUpdateEvent, null);
   }
 
+  var exploreConcept = function(conceptNode) {
+    var promise = service.getCoursesForConcept(conceptNode.name);
 
-  // Only to be called at beginning
-  var insertConcept = function(concept) {
-    node = new Node(concept, 'concept');
-    if (graph.insertNode(node) >= 0) {
-      // send model update message to view
-      event.emit(event.modelAddNodesEvent, {nodes:[node], links: []});
-    }
-  }
+    conceptNode.children = [];
 
-  // Only to be called at beginning
-  var insertCourse = function(course) {
-    node = new Node(course, 'course');
-    if (graph.insertNode(node) >= 0) {
-      // send model update message to view
-      event.emit(event.modelAddNodesEvent, {nodes:[node], links: []});
-    }
-  }
-
-  var insertCoursesForConcept = function(concept) {
-	  var promise = service.getCoursesForConcept(concept);
-    
-    var node, link, nodes, links;
-    updateNodes = [];
-    updateLinks = [];
     promise.then(function(results) {
-      var sourceId = graph.getIndex(concept);
-
-      // insert course nodes
       for (var i = 0; i < results.length; i++) {
-        node = new Node(results[i].get('code'), 'course');
-        var targetId = graph.insertNode(node);
-        if (targetId >= 0) {
-          updateNodes.push(node);
-          link = new Link(sourceId, targetId, 1);
-          graph.insertLink(link);
-          updateLinks.push(link);
-        }
+        child = new Node(results[i].get('code'), null, 'course');
+        conceptNode.children.push(child);
       }
 
-      //send model update message to view
-      event.emit(event.modelAddNodesEvent, {nodes:updateNodes, links:updateLinks});
-
+      event.emit(event.modelUpdateEvent, null);
     }, function(error) {
       alert("Error: " + error.code + " " + error.message);
     });
-  };
+  }
 
-  var insertConceptsForCourse = function(course) {
-    var promise = service.getConceptsForCourse(course);
-    
-    var node, link, nodes, links;
-    updateNodes = [];
-    updateLinks = [];
+  var exploreCourse = function(courseNode) {
+    var promise = service.getConceptsForCourse(courseNode.name);
+
+    courseNode.children = [];
+
     promise.then(function(results) {
-      var sourceId = graph.getIndex(course);
-
-      // insert course nodes
       for (var i = 0; i < results.length; i++) {
-        node = new Node(results[i].get('text'), 'concept');
-        var targetId = graph.insertNode(node);
-        if (targetId >= 0) {
-          updateNodes.push(node);
-          link = new Link(sourceId, targetId, 1);
-          graph.insertLink(link);
-          updateLinks.push(link);
-        }
+        child = new Node(results[i].get('text'), null, 'concept');
+        courseNode.children.push(child);
       }
 
-      //send model update message to view
-      event.emit(event.modelAddNodesEvent, {nodes:updateNodes, links:updateLinks});
-
+      event.emit(event.modelUpdateEvent, null);
     }, function(error) {
       alert("Error: " + error.code + " " + error.message);
     });
-  };
+  }
 
   return {
     init: init,
     getGraph: getGraph,
-    insertConcept: insertConcept,
-    insertCourse: insertCourse,
-    insertConceptsForCourse: insertConceptsForCourse,
-    insertCoursesForConcept: insertCoursesForConcept
+    addCourse: addCourse,
+    exploreCourse: exploreCourse,
+    exploreConcept: exploreConcept
   };
 });

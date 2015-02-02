@@ -1,110 +1,140 @@
 define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
-	var init = function() {
-	    $("body").append("<button id='concept-button' type='button'>get concept</button>");
-	    $("body").append("<button id='course-button' type='button'>get course</button>");
-	    $("body").append("<button id='more-button' type='button'>get more concept for course</button>");
 
-	    //
-	    var width = 960,
-	    	height = 500;
+  var init = function() {
+    $("body").append("<button id='course-button' type='button'>get course</button>");
 
-	    // set frame
-		var svg = d3.select("body").append("svg")
-	    .attr("width", width)
-	    .attr("height", height);
+    var width = $( window ).width(),
+      height = $( window ).height(),
+      root;
 
-	    // init force layout
-		var force = d3.layout.force()
-			.size([width, height])
-			.nodes([]) // initialize with a single node
-			.linkDistance(50)
-			.charge(-200)
-			.on("tick", tick);
+    var force = d3.layout.force()
+        .linkDistance(50)
+        .charge(-200)
+        // .gravity(.05)
+        .size([width, height])
+        .on("tick", tick);
 
-		// get layout properties
-		var nodes = force.nodes(),
-			links = force.links(),
-			node = svg.selectAll(".node"),
-			link = svg.selectAll(".link");
+    var svg = d3.select("body").append("svg")
+            .attr("id", "playgraph") 
+            .attr("width", width)
+            .attr("height", height);
 
-		function tick() {
-			link.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; });
-
-			node
-				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-		}
-		
-		function mouseclick(d) {
-			if (d3.event.defaultPrevented) return; // click suppressed
-			if(d.group === "concept") {
-				model.insertCoursesForConcept(d.name);
-			}else if(d.group === "course") {
-				model.insertConceptsForCourse(d.name);
-			}
-		}
-
-		// redraw force layout
-		function redraw() {
-
-			// D3 can't handle multiple nodes insertion. must do it one by one.
-			// Hence, need to get delta nodes from model and add them one by one.
-			// add new function in main-model to handle delta change
-			// new nodes doesn't link back to old ones. need to debug
-			link = link.data(links);
-
-			link.enter().insert("line", ".node")
-				.attr("class", "link");
-
-			link.exit().remove();
+    var link = svg.selectAll(".link"),
+        node = svg.selectAll(".node");
 
 
-			node = node.data(nodes);
+    event.listen(event.modelUpdateEvent, function(e, data) { 
+      root = model.getGraph();
+      update();
+    });
+  
 
-			//
+    function update() {
+      var nodes = flatten(root),
+          links = d3.layout.tree().links(nodes);
 
-			node.enter().append("g")
-				.attr("class", function(d){
-					return "node " + d.group
-				})
-				// .on("mouseover", mouseover)
-				// .on("mouseout", mouseout)
-				.on('click', mouseclick)
-				.call(force.drag);
+      // Restart the force layout.
+      force
+          .nodes(nodes)
+          .links(links)
+          .start();
 
-			node.select("circle").remove();
-			node.append("circle")
-				.attr("r", 8);
+      // Update links.
+      link = link.data(links, function(d) { return d.target.id; });
 
+      link.exit().remove();
 
-			node.select("text").remove();
-			node.append("text")
-				.attr("x", 12)
-				.attr("dy", ".35em")
-				.text(function(d) { return d.name; });
+      link.enter().insert("line", ".node")
+          .attr("class", "link");
 
-			node.exit().remove();
+      // Update nodes.
+      node = node.data(nodes, function(d) { return d.id; });
 
-			force.start();
-		}
+      node.exit().remove();
 
-		event.listen(event.modelAddNodesEvent, function(e, data) { 
-			// show data 
-			for (var i = 0; i < data.nodes.length; i++){
-				nodes.push(data.nodes[i]);
-			}
+      var nodeEnter = node.enter().append("g")
+          .attr("class", function(d){
+            return "node " + d.group
+          })
+          .on("click", click)
+          .call(force.drag);
 
-			for (var i = 0; i < data.links.length; i++){
-				links.push(data.links[i]);
-			}
-			redraw();
-		}); 
+      nodeEnter.append("circle")
+          .attr("r", function(d) { return Math.sqrt(d.size) / 10 || 4.5; });
 
-	};
+      nodeEnter.append("text")
+          .attr("dy", ".35em")
+          .text(function(d) { return d.name; });
+    }
 
-	return {
-		init: init
-	};
+    function tick() {
+      link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    }
+
+    // Toggle children on click.
+    function click(d) {
+      if (d3.event.defaultPrevented) return; // ignore drag
+
+      if (d.children) { // hide children
+        d._children = d.children;
+        d.children = null;
+      } else { // asyc load children
+        d.children = d._children;
+        d._children = null;
+        if(!d.children) {
+          if (d.group === "course") {
+            model.exploreCourse(d);
+          } else if (d.group === "concept") {
+            model.exploreConcept(d);
+          }
+        }
+      }
+
+      update();
+    }
+
+    // Returns a list of all nodes under the root.
+    function flatten(root) {
+      var nodes = [], i = d3.selectAll(".node").size();
+
+      function hideRecurse(node) {
+        if(!node.id) {
+          node.id = ++i;
+        }
+
+        if (node.children) {
+          node.children.forEach(hideRecurse);
+        } else if (node._children) {
+          node._children.forEach(hideRecurse);
+        }
+      }
+
+      function recurse(node) {
+        if(!node.id) {
+          node.id = ++i;
+        }
+
+        nodes.push(node);
+
+        if (node.children) {
+          node.children.forEach(recurse);
+        } else if (node._children) {
+          node._children.forEach(hideRecurse);
+        }
+      }
+
+      recurse(root);
+      return nodes;
+    }
+
+  };
+
+  return {
+    init: init
+  };
 });

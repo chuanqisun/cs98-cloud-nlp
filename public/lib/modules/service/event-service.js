@@ -1,5 +1,5 @@
 define(['jquery'], function() {
-  var modelAddNodesEvent = "model-add-nodes-event";
+  var modelUpdateEvent = "model-update-event";
 
   var emit = function(event, data) {
     $('body').trigger(event, data);
@@ -12,6 +12,6 @@ define(['jquery'], function() {
   return {
     emit: emit,
     listen: listen,
-    modelAddNodesEvent: modelAddNodesEvent
+    modelUpdateEvent: modelUpdateEvent,
   };
 });

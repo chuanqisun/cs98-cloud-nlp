@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# PBPL 49 has title issue
+# ENGL 53 has title issue
+
 ####################################################
 # use course urls to download content into a json file
 ####################################################

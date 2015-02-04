@@ -1,6 +1,14 @@
-define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
+define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model, event, config) {
 
   var init = function() {
+
+
+    d3.selection.prototype.moveToFront = function() {
+      return this.each(function(){
+        this.parentNode.appendChild(this);
+      });
+    };
+
     $("body").append("<button id='course-button' type='button'>get course</button>");
 
     var width = $( window ).width(),
@@ -8,8 +16,8 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
       root;
 
     var force = d3.layout.force()
-        .linkDistance(50)
-        .charge(-200)
+        .linkDistance(config.linkDistance)
+        .charge(config.charge)
         .size([width, height])
         .on("tick", tick);
 
@@ -17,10 +25,6 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
             .attr("id", "playgraph") 
             .attr("width", width)
             .attr("height", height);
-
-    var div = d3.select("body").append("div")   
-            .attr("class", "tooltip")               
-            .style("opacity", 0);
 
     var link = svg.selectAll(".link"),
         node = svg.selectAll(".node");
@@ -35,6 +39,8 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
     function update() {
       var nodes = flatten(root),
           links = d3.layout.tree().links(nodes);
+
+      console.dir(nodes);
 
       // Restart the force layout.
       force
@@ -63,21 +69,23 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
           .call(force.drag);
 
       nodeEnter.append("circle")
-          .attr("r", function(d) { return 5 + d.relevance * d.relevance * d.relevance * 20; })
-          .on("mouseover", function(d) {   
+          .attr("r", function(d) { return (d.relevance - 0.6) * 80; })
+          .on("mouseover", function(d) {
+            d3.select(this.parentNode).moveToFront();
+            d3.select(this)
+             .transition().attr("r", 50);
             if(d.group === "course"){           
-              div.transition()        
-                  .duration(200)      
-                  .style("opacity", .9);     
-              div.html(d.moreInfo.get('title'))  
-                  .style("left", (d3.event.pageX) + "px")     
-                  .style("top", (d3.event.pageY) + "px");    
+              d3.select(this.parentNode).select("text")
+                .text(function(d) { return d.moreInfo.get('title'); });
             }
           })                  
-          .on("mouseout", function(d) {       
-              div.transition()        
-                  .duration(500)      
-                  .style("opacity", 0);   
+          .on("mouseout", function(d) {     
+              d3.select(this).transition()  
+                .attr("r", function(d) { return (d.relevance - 0.6) * 80; }); 
+              if(d.group === "course"){           
+                d3.select(this.parentNode).select("text")
+                  .text(function(d) { return d.name; });
+              }
           });
 
       nodeEnter.append("text")

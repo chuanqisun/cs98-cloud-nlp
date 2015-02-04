@@ -4,7 +4,7 @@ define(['jquery', 'model'], function(jQuery, model) {
    //    model.insertConcept("Photography");
   	// });
   	$("#course-button").click(function() {
-  	  model.addCourse("SART 30");
+  	  model.addCourse("FILM 45");
   	});
     //  $("#more-button").click(function() {
     //   model.exploreCourse("SART 30");

@@ -10,20 +10,29 @@ define(['service', 'event'], function(service, event) {
     graph = {};
   };
 
-  var Node = function(name, children, group) {
+  var Node = function(name, children, group, relevance, moreInfo) {
     this.name = name;
     this.children = children;
     this.group = group;
+    this.relevance = relevance;
+    this.moreInfo = moreInfo;
   }
 
   var addCourse = function(course) {
-    var node = new Node(course, null, 'course');
-    var child;
-    // temporary solution
-    graph = node;
 
-    //send model update message to view
-    event.emit(event.modelUpdateEvent, null);
+    var promise = service.getCourse(course);
+
+    promise.then(function(results) {
+      if (results.length > 0) {
+        node = new Node(results[0].get('code'), null, 'course', 1, results[0].get('courseObj'));
+        // temporary solution
+        graph = node;
+        
+        event.emit(event.modelUpdateEvent, null);
+      }    
+    }, function(error) {
+      alert("Error: " + error.code + " " + error.message);
+    });    
   }
 
   var exploreConcept = function(conceptNode) {
@@ -33,7 +42,7 @@ define(['service', 'event'], function(service, event) {
 
     promise.then(function(results) {
       for (var i = 0; i < results.length; i++) {
-        child = new Node(results[i].get('code'), null, 'course');
+        child = new Node(results[i].get('code'), null, 'course', results[i].get('relevance'), results[i].get('courseObj'));
         conceptNode.children.push(child);
       }
 
@@ -50,7 +59,7 @@ define(['service', 'event'], function(service, event) {
 
     promise.then(function(results) {
       for (var i = 0; i < results.length; i++) {
-        child = new Node(results[i].get('text'), null, 'concept');
+        child = new Node(results[i].get('text'), null, 'concept', results[i].get('relevance'), null);
         courseNode.children.push(child);
       }
 

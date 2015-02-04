@@ -10,7 +10,6 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
     var force = d3.layout.force()
         .linkDistance(50)
         .charge(-200)
-        // .gravity(.05)
         .size([width, height])
         .on("tick", tick);
 
@@ -18,6 +17,10 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
             .attr("id", "playgraph") 
             .attr("width", width)
             .attr("height", height);
+
+    var div = d3.select("body").append("div")   
+            .attr("class", "tooltip")               
+            .style("opacity", 0);
 
     var link = svg.selectAll(".link"),
         node = svg.selectAll(".node");
@@ -60,10 +63,26 @@ define(['jquery', 'd3', 'model', 'event'], function(jQuery, d3, model, event) {
           .call(force.drag);
 
       nodeEnter.append("circle")
-          .attr("r", function(d) { return Math.sqrt(d.size) / 10 || 4.5; });
+          .attr("r", function(d) { return 5 + d.relevance * d.relevance * d.relevance * 20; })
+          .on("mouseover", function(d) {   
+            if(d.group === "course"){           
+              div.transition()        
+                  .duration(200)      
+                  .style("opacity", .9);     
+              div.html(d.moreInfo.get('title'))  
+                  .style("left", (d3.event.pageX) + "px")     
+                  .style("top", (d3.event.pageY) + "px");    
+            }
+          })                  
+          .on("mouseout", function(d) {       
+              div.transition()        
+                  .duration(500)      
+                  .style("opacity", 0);   
+          });
 
       nodeEnter.append("text")
-          .attr("dy", ".35em")
+          .attr("dy", ".35em") // vertical align to center
+          .attr("text-anchor", "middle") // horizontal align to center
           .text(function(d) { return d.name; });
     }
 

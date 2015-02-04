@@ -16,8 +16,6 @@ var AlchemyAPI = require('alchemy_mini');
 
 
 var courses = require('./data/course').data;
-
-
 // ===================================
 // Task: upload courses to Parse
 // Bottle neck: Parse. 

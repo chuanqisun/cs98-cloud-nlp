@@ -2,12 +2,40 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
   var init = function() {
 
+    event.listen(event.modelUpdateEvent, function(e, d) { 
+      console.log("received");
+      console.dir(d.children[3].children);
+      // draw children on original graph
+      root = d;
+      // fade out all text elements
+      if(g) {
+        g.transition().duration(500)
+          .style('opacity', 0);
 
-    d3.selection.prototype.moveToFront = function() {
-      return this.each(function(){
-        this.parentNode.appendChild(this);
-      });
-    };
+        setTimeout(function(){ update(); }, 500);
+
+      }else{
+        update();
+      }    
+
+      // // zoom into clicked node
+      // path.transition()
+      //   .duration(750)
+      //   .attrTween("d", arcTween(d))
+      //   .each("end", function(e, i) {
+      //       // check if the animated element's data e lies within the visible angle span given in d
+      //       if (e.x >= d.x && e.x < (d.x + d.dx)) {
+      //         // get a selection of the associated text element
+      //         var arcText = d3.select(this.parentNode).select("text");
+      //         // fade in the text element and recalculate positions
+      //         arcText.transition().duration(750)
+      //           .attr("opacity", 1)
+      //           .attr("transform", function() { return "rotate(" + computeTextRotation(e) + ")" })
+      //           .attr("x", function(d) { return y(d.y); });
+      //       }
+      //   });     
+
+    });
 
     $("body").append("<button id='course-button' type='button'>get course</button>");
 
@@ -15,148 +43,92 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
       height = $( window ).height(),
       root;
 
-    var force = d3.layout.force()
-        .linkDistance(config.linkDistance)
-        .charge(config.charge)
-        .size([width, height])
-        .on("tick", tick);
+    var radius = Math.min(width, height) / 2;
 
-    var svg = d3.select("body").append("svg")
-            .attr("id", "playgraph") 
-            .attr("width", width)
-            .attr("height", height);
+    var svg, g, path, text;
 
-    var link = svg.selectAll(".link"),
-        node = svg.selectAll(".node");
+    var x = d3.scale.linear()
+        .range([0, 2 * Math.PI]);
+
+    var y = d3.scale.sqrt()
+        .range([0, radius]);
+
+    var color = d3.scale.category20c();
 
 
-    event.listen(event.modelUpdateEvent, function(e, data) { 
-      root = model.getGraph();
-      update();
-    });
-  
+    var partition = d3.layout.partition()
+        .sort(null)
+        .value(function(d) { return 1; }); //sizing
+
+    var arc = d3.svg.arc()
+        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })
+        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))); })
+        .innerRadius(function(d) { return Math.max(0, y(d.y)); })
+        .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)); });
+
+    // Keep track of the node that is currently being displayed as the root.
+    var node;
 
     function update() {
-      var nodes = flatten(root),
-          links = d3.layout.tree().links(nodes);
+    //   if (svg) {
+      d3.select("svg").remove();
+      svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      // }
 
-      console.dir(nodes);
+      g = svg.selectAll("g")
+          .data(partition.nodes(root))
+        .enter().append("g")
+          .style('opacity', 0)
+          .attr("class", "segment");
 
-      // Restart the force layout.
-      force
-          .nodes(nodes)
-          .links(links)
-          .start();
+      path = g.append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
+        .on("click", click);
 
-      // Update links.
-      link = link.data(links, function(d) { return d.target.id; });
+      text = g.append("text")
+        .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+        .attr("x", function(d) { return y(d.y); })
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .text(function(d) { return d.name; });
 
-      link.exit().remove();
+      g.transition().duration(500)
+           .style('opacity', 1);
 
-      link.enter().insert("line", ".node")
-          .attr("class", "link");
+      d3.select(self.frameElement).style("height", height + "px");
 
-      // Update nodes.
-      node = node.data(nodes, function(d) { return d.id; });
+      function click(d) {
 
-      node.exit().remove();
-
-      var nodeEnter = node.enter().append("g")
-          .attr("class", function(d){
-            return "node " + d.group
-          })
-          .on("click", click)
-          .call(force.drag);
-
-      nodeEnter.append("circle")
-          .attr("r", function(d) { return (d.relevance - 0.6) * 80; })
-          .on("mouseover", function(d) {
-            d3.select(this.parentNode).moveToFront();
-            d3.select(this)
-             .transition().attr("r", 50);
-            if(d.group === "course"){           
-              d3.select(this.parentNode).select("text")
-                .text(function(d) { return d.moreInfo.get('title'); });
-            }
-          })                  
-          .on("mouseout", function(d) {     
-              d3.select(this).transition()  
-                .attr("r", function(d) { return (d.relevance - 0.6) * 80; }); 
-              if(d.group === "course"){           
-                d3.select(this.parentNode).select("text")
-                  .text(function(d) { return d.name; });
-              }
-          });
-
-      nodeEnter.append("text")
-          .attr("dy", ".35em") // vertical align to center
-          .attr("text-anchor", "middle") // horizontal align to center
-          .text(function(d) { return d.name; });
-    }
-
-    function tick() {
-      link.attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
-
-      node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-    }
-
-    // Toggle children on click.
-    function click(d) {
-      if (d3.event.defaultPrevented) return; // ignore drag
-
-      if (d.children) { // hide children
-        d._children = d.children;
-        d.children = null;
-      } else { // asyc load children
-        d.children = d._children;
-        d._children = null;
         if(!d.children) {
           if (d.group === "course") {
+            //model.exploreCourse(d);
             model.exploreCourse(d);
           } else if (d.group === "concept") {
-            model.exploreConcept(d);
+            model.getRelatedConceptsFromCourse(d);
           }
         }
       }
-
-      update();
     }
 
-    // Returns a list of all nodes under the root.
-    function flatten(root) {
-      var nodes = [], i = d3.selectAll(".node").size();
+    // Interpolate the scales!
+    function arcTween(d) {
+      var xd = d3.interpolate(x.domain(), [d.x, d.x + d.dx]),
+          yd = d3.interpolate(y.domain(), [d.y, 1]),
+          yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
+      return function(d, i) {
+        return i
+            ? function(t) { return arc(d); }
+            : function(t) { x.domain(xd(t)); y.domain(yd(t)).range(yr(t)); return arc(d); };
+      };
+    }
 
-      function hideRecurse(node) {
-        if(!node.id) {
-          node.id = ++i;
-        }
-
-        if (node.children) {
-          node.children.forEach(hideRecurse);
-        } else if (node._children) {
-          node._children.forEach(hideRecurse);
-        }
-      }
-
-      function recurse(node) {
-        if(!node.id) {
-          node.id = ++i;
-        }
-
-        nodes.push(node);
-
-        if (node.children) {
-          node.children.forEach(recurse);
-        } else if (node._children) {
-          node._children.forEach(hideRecurse);
-        }
-      }
-
-      recurse(root);
-      return nodes;
+    function computeTextRotation(d) {
+      return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
     }
 
   };

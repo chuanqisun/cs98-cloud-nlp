@@ -1,18 +1,8 @@
-.link {
-  stroke: #000;
+.segment path {
+  stroke: #fff;
+  stroke-width: 3px;
 }
-
-.node.concept circle {
-  fill: yellow;
-  stroke: #000;
-}
-
-.node.course circle {
-  fill: green;
-  stroke: #000;
-}
-
-.node text {
+.segment text {
   font: 12px helvetica;
   pointer-events: none;
 }

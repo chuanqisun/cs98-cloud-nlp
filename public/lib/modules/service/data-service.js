@@ -1,7 +1,38 @@
-define(['parse', 'config'], function(parse, config) {
+define(['parse', 'config', 'event'], function(parse, config, event) {
+  var allCourses;
+
   var init = function() {
     Parse.initialize("dpfdUhCXPPBflubK1bKkI8eeUAgyLf8FQZ86h1bq", "1Ac6b4DiROlm94KJJdyDuRAUS0oOmN4r4oqxouLt");
+    loadAllCourses();
   };
+
+  var getAllCourses = function () {
+    return allCourses;
+  }
+
+  var loadAllCourses = function() {
+    var Course = Parse.Object.extend("Course");
+    var query1 = new Parse.Query(Course);
+    var query2 = new Parse.Query(Course);
+    var query3 = new Parse.Query(Course);
+    var results = [];
+    query1.limit(1000);
+    query2.limit(1000);
+    query2.skip(1000);
+    query3.limit(1000);
+    query3.skip(2000);
+
+    query1.find().then(function(r){
+      allCourses = r;
+      return query2.find().then(function(r){
+        allCourses = allCourses.concat(r);
+        return query3.find().then(function(r){
+          allCourses = allCourses.concat(r);
+          event.emit(event.dataOnloadEvent, null);
+        })
+      })
+    })
+  }
 
   var getCourse = function(courseCode) {
     var Concept = Parse.Object.extend("Concept");
@@ -34,6 +65,8 @@ define(['parse', 'config'], function(parse, config) {
 
   return {
     init: init,
+    loadAllCourses: loadAllCourses,
+    getAllCourses: getAllCourses,
     getCourse: getCourse,
     getConceptsForCourse: getConceptsForCourse,
     getCoursesForConcept: getCoursesForConcept

@@ -8,7 +8,8 @@ require.config({
     "controller": "lib/modules/controller/main-controller",
     "service": "lib/modules/service/data-service",
     "event": "lib/modules/service/event-service",
-    "config": "lib/modules/config/config"
+    "config": "lib/modules/config/config",
+    "cosine": "lib/modules/util/cosine"
   }
 });
 

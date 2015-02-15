@@ -10,11 +10,12 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     graph = {};
   };
 
-  var Node = function(name, children, group, relevance, moreInfo) {
+  var Node = function(name, children, group, relevance, size, moreInfo) {
     this.name = name;
     this.children = children;
     this.group = group;
     this.relevance = relevance;
+    this.size = size;
     this.moreInfo = moreInfo;
   }
 
@@ -24,7 +25,7 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
 
     promise.then(function(results) {
       if (results.length > 0) {
-        node = new Node(results[0].get('code'), null, 'course', 1, results[0].get('courseObj'));
+        node = new Node(results[0].get('code'), null, 'root', 1, 100, results[0].get('courseObj'));
         // temporary solution
         graph = node;
         exploreCourse(node);
@@ -37,10 +38,10 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
   var initRoot = function(rootNode) {
     rootNode.children = [];
     rootNode.children.push(
-      {name: "Prerequisite", children: []},
-      {name: "Next Steps", children: []},
-      {name: "Topics", children: []},
-      {name: "Related", children: []}
+      {name: "Prerequisite", children: [], group: "prerequisite", size: 25},
+      {name: "Next Steps", children: [], group: "nextSteps", size: 25},
+      {name: "Topics", children: [], group: "topics", size: 25},
+      {name: "Related", children: [], group: "related", size: 25}
     )
   }
 
@@ -61,8 +62,9 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
   var getRelatedCoursesFromConcept = function(conceptNode, notify) {
     var promise = service.getCoursesForConcept(conceptNode.name).then(function(results) {
       conceptNode.children[3].children = [];
+      conceptNode.group = 'root';
       for (var i = 0; i < results.length; i++) {
-        var child = new Node(results[i].get('code'), null, 'course', results[i].get('relevance'), results[i].get('courseObj'));
+        var child = new Node(results[i].get('code'), null, 'related', results[i].get('relevance'), 25.0 / results.length, results[i].get('courseObj'));
         conceptNode.children[3].children.push(child);
       }
       return Parse.Promise.as();
@@ -76,8 +78,9 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
   var getRelatedConceptsFromCourse = function(courseNode) {
     var promise = service.getConceptsForCourse(courseNode.name).then(function(results) {
       courseNode.children[2].children = [];
+      courseNode.group = 'root';
       for (var i = 0; i < results.length; i++) {
-        var child = new Node(results[i].get('text'), null, 'concept', results[i].get('relevance'), null);
+        var child = new Node(results[i].get('text'), null, 'topics', results[i].get('relevance'), 25.0 / results.length, null);
         courseNode.children[2].children.push(child);
       }
       return Parse.Promise.as();
@@ -137,9 +140,9 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
 
       // Step 4 extra the most frequent courses as similar
       courseNode.children[3].children = [];
-      
+      courseNode.group = 'root';
       for (var i = 0; i < courseSorted.length; i++) {
-        var child = new Node(courseSorted[i].get('code'), null, 'course', courseSorted[i].get('relevance'), courseSorted[i].get('courseObj'));
+        var child = new Node(courseSorted[i].get('code'), null, 'related', courseSorted[i].get('relevance'), 25.0 / courseSorted.length, courseSorted[i].get('courseObj'));
         courseNode.children[3].children.push(child);
       }
       return Parse.Promise.as();

@@ -6,3 +6,27 @@
   font: 12px helvetica;
   pointer-events: none;
 }
+
+.main-graph {
+  position:absolute;
+  top: 0;
+  z-index: 100;
+}
+
+.details-container {
+  z-index: 50;
+}
+
+.details {
+  text-align: center;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.more-info {
+    width: 250px;
+    height: 100%;
+    position:absolute;
+    right: 0;
+}

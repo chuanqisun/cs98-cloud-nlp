@@ -1,10 +1,16 @@
 define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model, event, config) {
 
+  var colors = {
+    "root": "#ffffff",
+    "prerequisite": "#5687d1",
+    "nextSteps": "#7b615c",
+    "topics": "#6ab975",
+    "related": "#a173d1"
+  };
+
   var init = function() {
 
     event.listen(event.modelUpdateEvent, function(e, d) { 
-      console.log("received");
-      console.dir(d.children[3].children);
       // draw children on original graph
       root = d;
       // fade out all text elements
@@ -14,37 +20,21 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
         setTimeout(function(){ update(); }, 500);
 
-      }else{
+      }else{ //first time render
         update();
       }    
-
-      // // zoom into clicked node
-      // path.transition()
-      //   .duration(750)
-      //   .attrTween("d", arcTween(d))
-      //   .each("end", function(e, i) {
-      //       // check if the animated element's data e lies within the visible angle span given in d
-      //       if (e.x >= d.x && e.x < (d.x + d.dx)) {
-      //         // get a selection of the associated text element
-      //         var arcText = d3.select(this.parentNode).select("text");
-      //         // fade in the text element and recalculate positions
-      //         arcText.transition().duration(750)
-      //           .attr("opacity", 1)
-      //           .attr("transform", function() { return "rotate(" + computeTextRotation(e) + ")" })
-      //           .attr("x", function(d) { return y(d.y); });
-      //       }
-      //   });     
 
     });
 
     $("body").append("<button id='course-button' type='button'>get course</button>");
+    $("body").append("<div class='more-info'> loading ... </div>");
+    $("body").append("<div class='details-container'><div class='details'></div></div>");
 
     var width = $( window ).width(),
       height = $( window ).height(),
       root;
 
     var radius = Math.min(width, height) / 2;
-
     var svg, g, path, text;
 
     var x = d3.scale.linear()
@@ -58,7 +48,7 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
     var partition = d3.layout.partition()
         .sort(null)
-        .value(function(d) { return 1; }); //sizing
+        .value(function(d) { return d.size; }); //sizing
 
     var arc = d3.svg.arc()
         .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })
@@ -70,14 +60,13 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
     var node;
 
     function update() {
-    //   if (svg) {
       d3.select("svg").remove();
       svg = d3.select("body").append("svg")
       .attr("width", width)
       .attr("height", height)
+      .attr("class", "main-graph")
       .append("g")
       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-      // }
 
       g = svg.selectAll("g")
           .data(partition.nodes(root))
@@ -87,32 +76,109 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
       path = g.append("path")
         .attr("d", arc)
-        .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
+        .style("fill", function(d) { return colors[d.group]; })
+        .on("mouseover", mouseover)
+        .on("mouseleave", mouseleave)
         .on("click", click);
 
+      var rootR = $(".segment")[0].getBoundingClientRect().width / 2;
+      var padding = rootR * (1 - 1 / Math.sqrt(2));
+
+      $(".details-container").height(rootR * 2);
+      $(".details-container").width(rootR * 2);
+      $(".details-container").offset($(".segment")[0].getBoundingClientRect());
+
+      mouseleave(root);
+             
       text = g.append("text")
         .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
         .attr("x", function(d) { return y(d.y); })
         .attr("dx", "6") // margin
         .attr("dy", ".35em") // vertical-align
-        .text(function(d) { return d.name; });
+        .text(function(d) { 
+          if (d.depth) {
+            return d.name;
+          } else {
+            return "";
+          } 
+        });
 
-      g.transition().duration(500)
+      g.filter(filterNonRoot).transition().duration(500)
            .style('opacity', 1);
-
+           
       d3.select(self.frameElement).style("height", height + "px");
+
+      function filterNonRoot (d) {
+        return (d.depth > 0);
+      }
+
+      // Restore everything to full opacity when moving off the visualization.
+      function mouseleave(d) {
+        g.filter(filterNonRoot).style("opacity", 1);
+        $(".more-info").text(root.moreInfo.get('description'));
+        $(".details").empty();
+        $(".details").append("<div class='code'>" + root.moreInfo.get('code') + "</div>");
+        $(".details").append("<div class='title'>" + root.moreInfo.get('title') + "</div>");
+        $(".details").append("<div class='instructor'>" + root.moreInfo.get('instructor') + "</div>");
+        $(".details").append("<div class='distribution'>" + root.moreInfo.get('distribution') + "</div>");
+      }
+
+      function mouseover(d) {
+        if (d.depth) {
+          var sequenceArray = getAncestors(d);
+
+          // Fade all the segments.
+          g.filter(filterNonRoot).style("opacity", 0.3);
+
+          // Then highlight only those that are an ancestor of the current segment.
+          g.filter(filterNonRoot).filter(function(node) {
+            return (sequenceArray.indexOf(node) > 0);
+          })
+            .style("opacity", 1);
+        }
+
+        if (d.depth === 2 && d.group === "related") {
+          $(".more-info").text(d.moreInfo.get('description'));
+          $(".details").empty();
+          $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".details").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
+          $(".details").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
+          $(".details").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
+        }
+
+        if (d.depth === 1) {
+          $(".details").html("<div class='categorical'>" + d.name + "</div>");
+        }
+
+        if (d.depth === 2 && d.group === "topics") {
+          $(".details").html("<div class='topic'>" + d.name + "</div>");
+        }
+      }
 
       function click(d) {
 
         if(!d.children) {
-          if (d.group === "course") {
+          if (d.group === "related") {
             //model.exploreCourse(d);
             model.exploreCourse(d);
-          } else if (d.group === "concept") {
+          } else if (d.group === "topics") {
             model.getRelatedConceptsFromCourse(d);
           }
         }
       }
+    }
+
+    // Given a node in a partition layout, return an array of all of its ancestor
+    // nodes, highest first, but excluding the root.
+    function getAncestors(node) {
+      var path = [];
+      var current = node;
+      while (current.parent) {
+        path.unshift(current);
+        current = current.parent;
+      }
+      path.unshift(current);
+      return path;
     }
 
     // Interpolate the scales!

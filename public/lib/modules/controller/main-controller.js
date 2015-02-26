@@ -1,35 +1,6 @@
 define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, service, autocomplete) {
   var init = function() {
-    
-    var getMatchCourses = function(query, cb) {
-
-      var courses = service.getAllCourses();
-      substrRegex = new RegExp(query, 'i');
-
-      matches = [];
-      $.each(courses, function(i, obj) {
-        if (substrRegex.test(obj.get('code'))) {
-          matches.push({ value: obj.get('code'), obj: obj });
-        }
-      });
-
-      cb(matches);
-    }
-
-    var getMatchTitles = function(query, cb) {
-      var courses = service.getAllCourses();
-      substrRegex = new RegExp(query, 'i');
-
-      matches = [];
-      $.each(courses, function(i, obj) {
-        if (substrRegex.test(obj.get('title'))) {
-          matches.push({ value: obj.get('title'), obj: obj});
-        }
-      });
-
-      cb(matches);      
-    }
-
+  
     $('.typeahead').typeahead({
       hint: true,
       highlight: true,
@@ -56,7 +27,41 @@ define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, s
     });
 
   };
+
+  var getMatchCourses = function(query, cb) {
+
+    var courses = service.getAllCourses();
+    substrRegex = new RegExp(query, 'i');
+
+    matches = [];
+    $.each(courses, function(i, obj) {
+      if (substrRegex.test(obj.get('code'))) {
+        matches.push({ value: obj.get('code'), obj: obj });
+      }
+    });
+
+    cb(matches);
+  }
+
+  var getMatchTitles = function(query, cb) {
+    var courses = service.getAllCourses();
+    substrRegex = new RegExp(query, 'i');
+
+    matches = [];
+    $.each(courses, function(i, obj) {
+      if (substrRegex.test(obj.get('title'))) {
+        matches.push({ value: obj.get('title'), obj: obj});
+      }
+    });
+
+    cb(matches);      
+  }
+
+
+  
   return {
     init: init
   };
+
+
 });

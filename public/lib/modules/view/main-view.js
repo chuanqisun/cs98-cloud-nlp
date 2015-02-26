@@ -10,6 +10,11 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
 
   var init = function() {
 
+    event.listen(event.conceptUpdateEvent, function(e, d) {
+      root = d;
+      updateConcept();
+    });
+
     event.listen(event.modelUpdateEvent, function(e, d) { 
       // draw children on original graph
       root = d;
@@ -18,10 +23,10 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
         g.transition().duration(500)
           .style('opacity', 0);
 
-        setTimeout(function(){ update(); }, 500);
+        setTimeout(function(){ updateCourse(); }, 500);
 
       }else{ //first time render
-        update();
+        updateCourse();
       }    
 
     });
@@ -30,10 +35,6 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
       controller.init();
     });
     
-
-    //$("body").html("<button id='course-button' class='control-button' type='button'>get course</button><div class='more-info'> loading ... </div><div class='details-container'><div class='details'></div></div>");
-
-
     var width = $('.graph-container').width(),
       height = $('.graph-container').height(),
       root;
@@ -63,7 +64,7 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
     // Keep track of the node that is currently being displayed as the root.
     var node;
 
-    function update() {
+    function updateConcept() {
       d3.select("svg").remove();
       width = $('.graph-container').width();
       height = $('.graph-container').height();
@@ -76,7 +77,117 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
         .innerRadius(function(d) { return Math.max(0, y(d.y)); })
         .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)); });
 
-      console.dir(width + ' ' + height);
+      svg = d3.select(".graph-container").append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("class", "main-graph")
+      .append("g")
+      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+      g = svg.selectAll("g")
+          .data(partition.nodes(root))
+        .enter().append("g")
+          .style('opacity', 0)
+          .attr("class", "segment");
+
+      path = g.append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return colors[d.group]; })
+        .on("mouseover", mouseover)
+        .on("mouseleave", mouseleave)
+        .on("click", click);
+
+      var rootR = $(".segment")[0].getBoundingClientRect().width / 2;
+      var padding = rootR * (1 - 1 / Math.sqrt(2));
+
+      $(".right-panel").height(rootR * 2);
+      $(".right-panel").width(rootR * 2);
+      $(".right-panel").offset($(".segment")[0].getBoundingClientRect());
+
+      mouseleave(root);
+             
+      text = g.append("text")
+        .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+        .attr("x", function(d) { return y(d.y); })
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .text(function(d) { 
+          if (d.depth) {
+            return d.name;
+          } else {
+            return "";
+          } 
+        });
+
+      g.filter(filterNonRoot).transition().duration(500)
+           .style('opacity', 1);
+           
+      d3.select(self.frameElement).style("height", height + "px");
+
+      function filterNonRoot (d) {
+        return (d.depth > 0);
+      }
+
+      // Restore everything to full opacity when moving off the visualization.
+      function mouseleave(d) {
+        g.filter(filterNonRoot).style("opacity", 1);
+         $(".more-info").empty();
+        $(".details").empty();
+        $(".details").append("<div class='topic'>" + root.name + "</div>");
+      }
+
+      function mouseover(d) {
+        if (d.depth) {
+          var sequenceArray = getAncestors(d);
+
+          // Fade all the segments.
+          g.filter(filterNonRoot).style("opacity", 0.3);
+
+          // Then highlight only those that are an ancestor of the current segment.
+          g.filter(filterNonRoot).filter(function(node) {
+            return (sequenceArray.indexOf(node) > 0);
+          })
+            .style("opacity", 1);
+        }
+
+        if (d.depth === 1 && d.group === "related") {
+          $(".more-info").text(d.moreInfo.get('description'));
+          $(".details").empty();
+          $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".details").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
+          $(".details").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
+          $(".details").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
+        }
+
+        if (d.depth === 2 && d.group === "topics") {
+          $(".details").html("<div class='topic'>" + d.name + "</div>");
+        }
+      }
+
+      function click(d) {
+
+        if(!d.children) {
+          if (d.group === "related") {
+            model.exploreCourse(d);
+          } else if (d.group === "topics") {
+            model.exploreConcept(d);
+          }
+        }
+      }
+    }
+
+    function updateCourse() {
+      d3.select("svg").remove();
+      width = $('.graph-container').width();
+      height = $('.graph-container').height();
+      radius = Math.min(width, height) / 2;
+      y = d3.scale.sqrt()
+        .range([0, radius]);
+      arc = d3.svg.arc()
+        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })
+        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))); })
+        .innerRadius(function(d) { return Math.max(0, y(d.y)); })
+        .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)); });
 
       svg = d3.select(".graph-container").append("svg")
       .attr("width", width)
@@ -176,10 +287,9 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
 
         if(!d.children) {
           if (d.group === "related") {
-            //model.exploreCourse(d);
             model.exploreCourse(d);
           } else if (d.group === "topics") {
-            model.getRelatedConceptsFromCourse(d);
+            model.exploreConcept(d);
           }
         }
       }

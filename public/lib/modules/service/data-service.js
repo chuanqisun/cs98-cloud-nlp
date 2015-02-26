@@ -32,7 +32,6 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
         })
       })
     })
-
   }
 
   var getCourse = function(courseCode) {
@@ -49,6 +48,7 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     query.equalTo("code", courseCode);
     query.descending("relevance");
     query.greaterThan("relevance", config.conceptMinRelevance);
+    query.include("courseObj");
     return query.find();
   };
 

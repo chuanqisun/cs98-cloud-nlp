@@ -1,5 +1,6 @@
 define(['jquery'], function() {
   var modelUpdateEvent = "model-update-event";
+  var conceptUpdateEvent = "concept-update-event";
   var dataOnloadEvent = "data-onload-event";
 
   var emit = function(event, data) {
@@ -14,6 +15,7 @@ define(['jquery'], function() {
     emit: emit,
     listen: listen,
     modelUpdateEvent: modelUpdateEvent,
+    conceptUpdateEvent: conceptUpdateEvent,
     dataOnloadEvent: dataOnloadEvent
   };
 });

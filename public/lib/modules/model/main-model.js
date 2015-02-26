@@ -56,16 +56,30 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     Parse.Promise.when([p1, p2]).then(function(){
       event.emit(event.modelUpdateEvent, courseNode);
     });
-  
   }
 
-  var getRelatedCoursesFromConcept = function(conceptNode, notify) {
+  var exploreConcept = function(conceptNode) {
+    var promise = getRelatedCoursesFromConcept(conceptNode);
+
+    promise.then(function(){
+      event.emit(event.conceptUpdateEvent, conceptNode);
+    })
+  }
+
+  // return an array of concepts that contains the query string, ranking by the number of results
+  var getConcepts = function(query) {
+
+
+  }
+
+  var getRelatedCoursesFromConcept = function(conceptNode) {
+
     var promise = service.getCoursesForConcept(conceptNode.name).then(function(results) {
-      conceptNode.children[3].children = [];
       conceptNode.group = 'root';
+       conceptNode.children = [];
       for (var i = 0; i < results.length; i++) {
-        var child = new Node(results[i].get('code'), null, 'related', results[i].get('relevance'), 25.0 / results.length, results[i].get('courseObj'));
-        conceptNode.children[3].children.push(child);
+        var child = new Node(results[i].get('code'), null, 'related', results[i].get('relevance'), 100.0 / results.length, results[i].get('courseObj'));
+        conceptNode.children.push(child);
       }
       return Parse.Promise.as();
     }, function(error) {
@@ -80,7 +94,7 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
       courseNode.children[2].children = [];
       courseNode.group = 'root';
       for (var i = 0; i < results.length; i++) {
-        var child = new Node(results[i].get('text'), null, 'topics', results[i].get('relevance'), 25.0 / results.length, null);
+        var child = new Node(results[i].get('text'), null, 'topics', results[i].get('relevance'), 25.0 / results.length, results[i].get('courseObj'));
         courseNode.children[2].children.push(child);
       }
       return Parse.Promise.as();
@@ -159,6 +173,7 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     getGraph: getGraph,
     addCourse: addCourse,
     exploreCourse: exploreCourse,
+    exploreConcept: exploreConcept,
     getRelatedConceptsFromCourse: getRelatedConceptsFromCourse,
     getRelatedCoursesFromConcept: getRelatedCoursesFromConcept,
     getRelatedCoursesFromCourse: getRelatedCoursesFromCourse

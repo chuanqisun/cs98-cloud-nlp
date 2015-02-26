@@ -1,6 +1,7 @@
 require.config({
   paths: {
-    "jquery": "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min",
+    "template": "lib/modules/template/main-view.html",
+    "jquery": "https://code.jquery.com/jquery-2.1.3.min",
     "d3": "http://d3js.org/d3.v3.min",
     "parse": "http://www.parsecdn.com/js/parse-1.3.4.min",
     "model": "lib/modules/model/main-model",
@@ -9,7 +10,8 @@ require.config({
     "service": "lib/modules/service/data-service",
     "event": "lib/modules/service/event-service",
     "config": "lib/modules/config/config",
-    "cosine": "lib/modules/util/cosine"
+    "cosine": "lib/modules/util/cosine",
+    "autocomplete": "lib/modules/util/typeahead/typeahead.jquery.min"
   }
 });
 

@@ -1,17 +1,60 @@
-define(['jquery', 'model', 'service'], function(jQuery, model, service) {
+define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, service, autocomplete) {
   var init = function() {
-   //  $("#concept-button").click(function() {
-   //    model.insertConcept("Photography");
-  	// });
-  	$("#course-button").click(function() {
-  	  model.addCourse("COSC 1");
+    
+    var getMatchCourses = function(query, cb) {
 
-      // load parse data base to speed up query
-      // service.getAllCourses();
-  	});
-    //  $("#more-button").click(function() {
-    //   model.exploreCourse("SART 30");
-    // });
+      var courses = service.getAllCourses();
+      substrRegex = new RegExp(query, 'i');
+
+      matches = [];
+      $.each(courses, function(i, obj) {
+        if (substrRegex.test(obj.get('code'))) {
+          matches.push({ value: obj.get('code'), obj: obj });
+        }
+      });
+
+      cb(matches);
+    }
+
+    var getMatchTitles = function(query, cb) {
+      var courses = service.getAllCourses();
+      substrRegex = new RegExp(query, 'i');
+
+      matches = [];
+      $.each(courses, function(i, obj) {
+        if (substrRegex.test(obj.get('title'))) {
+          matches.push({ value: obj.get('title'), obj: obj});
+        }
+      });
+
+      cb(matches);      
+    }
+
+    $('.typeahead').typeahead({
+      hint: true,
+      highlight: true,
+      minLength: 1
+    },
+    {
+      name: 'states',
+      displayKey: 'value',
+      source: getMatchTitles,
+      templates: {
+        header: '<h3 class="course-title">Title</h3>'
+      }
+    },
+    {
+      name: 'states',
+      displayKey: 'value',
+      source: getMatchCourses,
+      templates: {
+        header: '<h3 class="course-code">Code</h3>'
+      }
+    }).on('typeahead:selected', function (obj, datum) {
+      console.dir(datum);
+      model.addCourse(datum.obj.get('code'));  
+    });
+
   };
   return {
     init: init

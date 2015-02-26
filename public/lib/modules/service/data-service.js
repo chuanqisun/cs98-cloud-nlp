@@ -32,6 +32,7 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
         })
       })
     })
+
   }
 
   var getCourse = function(courseCode) {

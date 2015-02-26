@@ -1,4 +1,4 @@
-define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model, event, config) {
+define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQuery, d3, model, event, config, controller) {
 
   var colors = {
     "root": "#ffffff",
@@ -26,12 +26,16 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
     });
 
-    $("body").append("<button id='course-button' type='button'>get course</button>");
-    $("body").append("<div class='more-info'> loading ... </div>");
-    $("body").append("<div class='details-container'><div class='details'></div></div>");
+    $("body").load("/lib/modules/template/main-view.html", function() {
+      controller.init();
+    });
+    
 
-    var width = $( window ).width(),
-      height = $( window ).height(),
+    //$("body").html("<button id='course-button' class='control-button' type='button'>get course</button><div class='more-info'> loading ... </div><div class='details-container'><div class='details'></div></div>");
+
+
+    var width = $('.graph-container').width(),
+      height = $('.graph-container').height(),
       root;
 
     var radius = Math.min(width, height) / 2;
@@ -61,7 +65,20 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
 
     function update() {
       d3.select("svg").remove();
-      svg = d3.select("body").append("svg")
+      width = $('.graph-container').width();
+      height = $('.graph-container').height();
+      radius = Math.min(width, height) / 2;
+      y = d3.scale.sqrt()
+        .range([0, radius]);
+      arc = d3.svg.arc()
+        .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })
+        .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))); })
+        .innerRadius(function(d) { return Math.max(0, y(d.y)); })
+        .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)); });
+
+      console.dir(width + ' ' + height);
+
+      svg = d3.select(".graph-container").append("svg")
       .attr("width", width)
       .attr("height", height)
       .attr("class", "main-graph")
@@ -84,9 +101,9 @@ define(['jquery', 'd3', 'model', 'event', 'config'], function(jQuery, d3, model,
       var rootR = $(".segment")[0].getBoundingClientRect().width / 2;
       var padding = rootR * (1 - 1 / Math.sqrt(2));
 
-      $(".details-container").height(rootR * 2);
-      $(".details-container").width(rootR * 2);
-      $(".details-container").offset($(".segment")[0].getBoundingClientRect());
+      $(".right-panel").height(rootR * 2);
+      $(".right-panel").width(rootR * 2);
+      $(".right-panel").offset($(".segment")[0].getBoundingClientRect());
 
       mouseleave(root);
              

@@ -25,14 +25,19 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
 
     promise.then(function(results) {
       if (results.length > 0) {
-        node = new Node(results[0].get('code'), null, 'root', 1, 100, results[0].get('courseObj'));
-        // temporary solution
+        var node = new Node(results[0].get('code'), null, 'root', 1, 100, results[0].get('courseObj'));
         graph = node;
         exploreCourse(node);
       }    
     }, function(error) {
       alert("Error: " + error.code + " " + error.message);
     });    
+  }
+
+  var addConcept = function(concept) {
+    var node = new Node(concept, null, 'root', 1, 100, null);
+    graph = node;
+    exploreConcept(node);
   }
 
   var initRoot = function(rootNode) {
@@ -67,16 +72,41 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
   }
 
   // return an array of concepts that contains the query string, ranking by the number of results
-  var getConcepts = function(query) {
+  var getRankedConcepts = function(query) {
+    var promise = service.getConcepts(query);
+    var conceptsDict = {};
+    var conceptsArray = [];
 
+    return promise.then(function(results){
+    
+      for (var i = 0; i < results.length; i++) {
 
+        if (!conceptsDict[results[i].get('text')]) {
+          conceptsDict[results[i].get('text')] = 1;
+        } else {
+          conceptsDict[results[i].get('text')]++;
+        }
+      }
+
+      var sortable = [];
+      for (var concept in conceptsDict) {
+        sortable.push([concept, conceptsDict[concept]])
+      }
+      sortable.sort(function(a, b) {return b[1] - a[1]});
+
+      for (var i = 0; i < sortable.length; i++) {
+        conceptsArray[i] = sortable[i][0];
+      }
+
+      return Parse.Promise.as(conceptsArray);
+    })
   }
 
   var getRelatedCoursesFromConcept = function(conceptNode) {
 
     var promise = service.getCoursesForConcept(conceptNode.name).then(function(results) {
       conceptNode.group = 'root';
-       conceptNode.children = [];
+      conceptNode.children = [];
       for (var i = 0; i < results.length; i++) {
         var child = new Node(results[i].get('code'), null, 'related', results[i].get('relevance'), 100.0 / results.length, results[i].get('courseObj'));
         conceptNode.children.push(child);
@@ -172,8 +202,10 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     initRoot: initRoot,
     getGraph: getGraph,
     addCourse: addCourse,
+    addConcept: addConcept,
     exploreCourse: exploreCourse,
     exploreConcept: exploreConcept,
+    getRankedConcepts: getRankedConcepts,
     getRelatedConceptsFromCourse: getRelatedConceptsFromCourse,
     getRelatedCoursesFromConcept: getRelatedCoursesFromConcept,
     getRelatedCoursesFromCourse: getRelatedCoursesFromCourse

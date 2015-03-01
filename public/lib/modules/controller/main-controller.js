@@ -7,23 +7,35 @@ define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, s
       minLength: 1
     },
     {
-      name: 'states',
+      name: 'title',
       displayKey: 'value',
       source: getMatchTitles,
       templates: {
-        header: '<h3 class="course-title">Title</h3>'
+        header: '<h3 class="search-result-title">Title</h3>'
       }
     },
     {
-      name: 'states',
+      name: 'code',
       displayKey: 'value',
       source: getMatchCourses,
       templates: {
-        header: '<h3 class="course-code">Code</h3>'
+        header: '<h3 class="search-result-code">Code</h3>'
+      }
+    },
+    {
+      name: 'concept',
+      displayKey: 'value',
+      source: getMatchConcepts,
+      templates: {
+        header: '<h3 class="search-result-concept">Concept</h3>'
       }
     }).on('typeahead:selected', function (obj, datum) {
       console.dir(datum);
-      model.addCourse(datum.obj.get('code'));  
+      if(datum.obj===null) {
+        model.addConcept(datum.value);
+      } else {
+        model.addCourse(datum.obj.get('code'));  
+      }
     });
 
   };
@@ -57,7 +69,17 @@ define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, s
     cb(matches);      
   }
 
+  var getMatchConcepts = function(query, cb) {
+    var promise = model.getRankedConcepts(query).then(function(concepts){
 
+      matches = [];
+      for(var i = 0; i < concepts.length; i++) {
+        matches.push({ value: concepts[i], obj: null});
+      }
+   
+      cb(matches);
+    });
+  }
   
   return {
     init: init

@@ -62,7 +62,12 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     return query.find();
   };
 
-
+  var getConcepts = function(concept) {
+    var Concept = Parse.Object.extend("Concept");
+    var query = new Parse.Query(Concept);
+    query.contains("textLowerCase", concept.toLowerCase());
+    return query.find();
+  }
 
   return {
     init: init,
@@ -70,6 +75,7 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     getAllCourses: getAllCourses,
     getCourse: getCourse,
     getConceptsForCourse: getConceptsForCourse,
-    getCoursesForConcept: getCoursesForConcept
+    getCoursesForConcept: getCoursesForConcept,
+    getConcepts: getConcepts
   };
 });

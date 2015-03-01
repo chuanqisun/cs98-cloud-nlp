@@ -5,7 +5,42 @@
 //   response.success("Hello world!");
 
 // });
+Parse.Cloud.beforeSave("Concept", function(request, response) {
+  if (request.object.get("text")) {
+    request.object.set("textLowerCase", request.object.get("text").toLowerCase());
+  }
 
+  response.success();
+});
+
+Parse.Cloud.job("addLowercase_concept_names", function(request, status) {
+  var _ = require('underscore');
+  Parse.Cloud.useMasterKey();
+
+  var newObj = [];
+  var Concept = Parse.Object.extend("Concept");
+  var query = new Parse.Query(Concept);
+  
+  query.limit(1000);
+  query.doesNotExist('textLowerCase');
+
+  query.find().then(function(concpets) {
+    _.each(concpets, function(concept) {
+      concept.set("textLowerCase", concept.get("text").toLowerCase());
+      newObj.push(concept);
+    });
+
+    Parse.Object.saveAll(newObj, {
+      success: function(list) {
+        status.success("good");
+      },
+      error: function(error) {
+       status.error("Error: " + error.code + " " + error.message);
+      },
+    });
+
+  });
+});
 
 Parse.Cloud.job("addPointer_from_concept_to_course", function(request, status) {
   // Set up to modify user data
@@ -57,50 +92,4 @@ Parse.Cloud.job("addPointer_from_concept_to_course", function(request, status) {
         });
 
   });
-
-
-
-  // query.find().then(function(results){
-
-  //   var promise = new Parse.Promise();
-    
-
-  //   for(var i = 0; i < results.length; i++){
-  //     var obj = results[i];
-
-  //     status.message("index: " + i);
-
-  //     innerQuery.limit(1000);
-  //     innerQuery.equalTo('code', results[i].get('code'));
-
-
-  //     promises.push(innerQuery.find().then(function(innerResult){
-  //       console.log("executed " + i + " " + obj.get('code'));
-  //       if (innerResult.length > 0){
-  //         console.log("found obj for " + i);
-  //       }
-  //       obj.set("courseObj", innerResult[0]);
-  //       newObj.push(obj);
-
-  //     }));
-
-
-  //   }
-  //   Parse.Promise.when(promises).then(function() {
-  //     Parse.Object.saveAll(newObj, {
-  //       success: function(list) {
-  //         console.log(list);
-  //         status.success("good");
-  //       },
-  //       error: function(error) {
-  //        status.error("Error: " + error.code + " " + error.message);
-  //       },
-  //     });
-      
-  //   }, function(error) {
-  //     status.error("Error: " + error.code + " " + error.message);
-  //   });
-    
-  // });
-
 });

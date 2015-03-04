@@ -67,26 +67,6 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     // Keep track of the node that is currently being displayed as the root.
     var node;
 
-    function hideSunburst() {
-      $(".graph-container").hide();
-      $(".details").hide();
-      $(".more-info").hide();
-    }
-
-    function showSunburst() {
-      $(".graph-container").show();
-      $(".details").show();
-      $(".more-info").show();
-    }
-
-    function hideCloud() {
-      $(".cloud").hide();
-    }
-
-    function showCloud() {
-      $(".cloud").show();
-    }
-
     function loadCloud(group, position) {
 
       // TEST DEBUG
@@ -108,6 +88,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
                 .fontSize(function(d) { return d.size; })
                 .on("end", draw)
                 .start();
+
             function draw(words) {
               d3.select(position).append("svg")
                   .attr("class", "cloud")
@@ -126,18 +107,30 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
                     return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
                   })
                   .text(function(d) { return d.text; })
-                  .on("click", function(d) {
-                    hideCloud();
-                    showSunburst();
-                    console.dir(d);
-                    if (d.group=="course") {
-                      model.addCourse(d.text);
-                    } else if (d.group=="concept") {
-                      model.addConcept(d.text);
-                    }
-                    
-                  });
+                  .on("click", cloudClick)
+                  .on("mouseover", cloudMouseOver)
+                  .on("mouseleave", cloudMouseLeave);
+            }
 
+            function cloudMouseOver(d) {
+              d3.select(this).style("font-size", function(d) { return 1.2 * d.size + "px"; })
+            }
+
+            function cloudMouseLeave(d) {
+              d3.select(this).style("font-size", function(d) { return d.size + "px"; })
+            }
+
+
+            function cloudClick(d) {
+              hideCloud();
+              showSunburst();
+              if (d.group=="course") {
+                service.putActivity(d.text, 'popular', 'course');
+                model.addCourse(d.text);
+              } else if (d.group=="concept") {
+                service.putActivity(d.text, 'popular', 'concept');
+                model.addConcept(d.text);
+              }
             }
         }
       });
@@ -407,7 +400,32 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
   };
 
+  var hideSunburst = function() {
+    $(".graph-container").hide();
+    $(".details").hide();
+    $(".more-info").hide();
+  }
+
+  var showSunburst = function() {
+    $(".graph-container").show();
+    $(".details").show();
+    $(".more-info").show();
+  }
+
+  var hideCloud = function() {
+    $(".cloud").hide();
+  }
+
+  var showCloud = function() {
+    $(".cloud").show();
+  }
+
+
   return {
-    init: init
+    init: init,
+    hideSunburst: hideSunburst,
+    showSunburst: showSunburst,
+    hideCloud: hideCloud,
+    showCloud: showCloud
   };
 });

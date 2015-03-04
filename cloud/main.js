@@ -13,6 +13,8 @@ Parse.Cloud.define("getMostViewed", function(request, response) {
 
   query.equalTo('group', group)
   query.greaterThanOrEqualTo( "createdAt", startDate);
+  query.descending("createdAt");
+  query.limit(1000)
   query.find().then(function(activities){
 
     var aggregate = {};

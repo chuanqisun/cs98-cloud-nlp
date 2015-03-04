@@ -1,4 +1,4 @@
-define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, service, autocomplete) {
+define(['require', 'jquery', 'model', 'service', 'autocomplete', ], function(require, jQuery, model, service, autocomplete) {
   var init = function() {
   
     $('.typeahead').typeahead({
@@ -30,11 +30,21 @@ define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, s
         header: '<h3 class="search-result-concept">Concept</h3>'
       }
     }).on('typeahead:selected', function (obj, datum) {
+      view = require('view');
+      view.hideCloud();
+      view.showSunburst();
       if(datum.obj===null) {
+
+        service.putActivity(datum.value, 'search', 'concept');
         model.addConcept(datum.value);
       } else {
+        service.putActivity(datum.obj.get('code'), 'search', 'course');
         model.addCourse(datum.obj.get('code'));  
       }
+    }).on('typeahead:opened', function (obj, datum) {
+      $('.tt-dataset-title').addClass('col-md-4');
+      $('.tt-dataset-code').addClass('col-md-4');
+      $('.tt-dataset-concept').addClass('col-md-4');
     });
 
   };

@@ -30,7 +30,6 @@ define(['jquery', 'model', 'service', 'autocomplete'], function(jQuery, model, s
         header: '<h3 class="search-result-concept">Concept</h3>'
       }
     }).on('typeahead:selected', function (obj, datum) {
-      console.dir(datum);
       if(datum.obj===null) {
         model.addConcept(datum.value);
       } else {

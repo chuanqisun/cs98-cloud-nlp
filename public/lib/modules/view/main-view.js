@@ -1,4 +1,4 @@
-define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQuery, d3, model, event, config, controller) {
+define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'service'], function(jQuery, d3, d3cloud, model, event, config, controller, service) {
 
   var colors = {
     "root": "#ffffff",
@@ -32,6 +32,9 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
     });
 
     $("body").load("/lib/modules/template/main-view.html", function() {
+      hideSunburst();
+      loadCloud("course", ".main-left-panel");
+      loadCloud("concept", ".main-right-panel");
       controller.init();
     });
     
@@ -63,6 +66,83 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
 
     // Keep track of the node that is currently being displayed as the root.
     var node;
+
+    function hideSunburst() {
+      $(".graph-container").hide();
+      $(".details").hide();
+      $(".more-info").hide();
+    }
+
+    function showSunburst() {
+      $(".graph-container").show();
+      $(".details").show();
+      $(".more-info").show();
+    }
+
+    function hideCloud() {
+      $(".cloud").hide();
+    }
+
+    function showCloud() {
+      $(".cloud").show();
+    }
+
+    function loadCloud(group, position) {
+
+      // TEST DEBUG
+      Parse.Cloud.run('getMostViewed', { group: group }, {
+        success: function(activities) {
+          width = $(position).width();
+          height = $(position).height();
+          console.dir(activities);
+
+          var fill = d3.scale.category20();
+
+            d3.layout.cloud().size([width, height])
+                .words(activities.map(function(d) {
+                  return {text: d.keyword, group: d.group, size: Math.sqrt(d.value * 1000)};
+                }))
+                .padding(5)
+                .rotate(function() { return ~~(Math.random() * 2) * 90; })
+                .font("Impact")
+                .fontSize(function(d) { return d.size; })
+                .on("end", draw)
+                .start();
+            function draw(words) {
+              d3.select(position).append("svg")
+                  .attr("class", "cloud")
+                  .attr("width", width)
+                  .attr("height", height)
+                .append("g")
+                  .attr("transform", "translate("+ width/2 +","+ height/2 +")")
+                .selectAll("text")
+                  .data(words)
+                .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  .style("font-family", "Impact")
+                  .style("fill", function(d, i) { return fill(i); })
+                  .attr("text-anchor", "middle")
+                  .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text; })
+                  .on("click", function(d) {
+                    hideCloud();
+                    showSunburst();
+                    console.dir(d);
+                    if (d.group=="course") {
+                      model.addCourse(d.text);
+                    } else if (d.group=="concept") {
+                      model.addConcept(d.text);
+                    }
+                    
+                  });
+
+            }
+        }
+      });
+
+    }
 
     function updateConcept() {
       d3.select("svg").remove();
@@ -169,8 +249,7 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
         if(!d.children) {
           if (d.group === "related") {
             model.exploreCourse(d);
-          } else if (d.group === "topics") {
-            model.exploreConcept(d);
+            service.putActivity(d.moreInfo.get('code'), 'explore', 'course');
           }
         }
       }
@@ -288,8 +367,10 @@ define(['jquery', 'd3', 'model', 'event', 'config', 'controller'], function(jQue
         if(!d.children) {
           if (d.group === "related") {
             model.exploreCourse(d);
+            service.putActivity(d.moreInfo.get('code'), 'explore', 'course');
           } else if (d.group === "topics") {
             model.exploreConcept(d);
+            service.putActivity(d.name, 'explore', 'concept');
           }
         }
       }

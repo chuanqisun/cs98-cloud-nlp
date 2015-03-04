@@ -69,6 +69,15 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     return query.find();
   }
 
+  var putActivity = function(keyword, type, group) {
+    var UserActivity = Parse.Object.extend("UserActivity");
+    var userActivity = new UserActivity();
+    userActivity.set("keyword", keyword);
+    userActivity.set("type", type);
+    userActivity.set("group", group);
+    userActivity.save();
+  }
+
   return {
     init: init,
     loadAllCourses: loadAllCourses,
@@ -76,6 +85,7 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     getCourse: getCourse,
     getConceptsForCourse: getConceptsForCourse,
     getCoursesForConcept: getCoursesForConcept,
-    getConcepts: getConcepts
+    getConcepts: getConcepts,
+    putActivity: putActivity
   };
 });

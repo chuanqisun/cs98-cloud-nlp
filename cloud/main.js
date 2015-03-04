@@ -1,10 +1,74 @@
 
-// Use Parse.Cloud.define to define as many cloud functions as you want.
-// For example:
-// Parse.Cloud.define("hello", function(request, response) {
-//   response.success("Hello world!");
+// return an array of most viewed objects
+Parse.Cloud.define("getMostViewed", function(request, response) {
+  var _ = require('underscore');
+  var group = request.params.group;
 
-// });
+  var UserActivity = Parse.Object.extend("UserActivity");
+  var query = new Parse.Query(UserActivity);
+
+  var d = new Date();
+  var time = (1 * 24 * 3600 * 1000); // one day's time
+  var startDate = new Date(d.getTime() - (time));
+
+  query.equalTo('group', group)
+  query.greaterThanOrEqualTo( "createdAt", startDate);
+  query.find().then(function(activities){
+
+    var aggregate = {};
+
+    var test = [];
+
+    _.each(activities, function(activity) {
+      keyword = activity.get("keyword");
+
+      if (!aggregate[keyword]) {
+        aggregate[keyword] = 1;
+      } else {
+        aggregate[keyword]++;
+      }
+    });
+
+    var sortable = [];
+    for (var item in aggregate) {
+      sortable.push({keyword: item, value: aggregate[item], group: group})
+    }
+    sortable.sort(function(a, b) {return b.value - a.value});
+
+
+    response.success(sortable);
+  })
+
+
+  
+});
+
+Parse.Cloud.beforeSave("UserActivity", function(request, response) {
+  if (request.object.get("group") == "course") {
+    var code = request.object.get("keyword");
+    var Course = Parse.Object.extend("Course");
+    var query = new Parse.Query(Course);
+
+    query.equalTo('code', code);
+    query.find().then(function(innerResult){
+      request.object.set("relatedCourse", innerResult[0]);
+      response.success();
+    });
+  } else if (request.object.get("group") == "concept") {
+    var concept = request.object.get("keyword");
+    var Concept = Parse.Object.extend("Concept");
+    var query = new Parse.Query(Concept);
+
+    query.equalTo('text', concept);
+    query.find().then(function(innerResult){
+      request.object.set("relatedConcept", innerResult[0]);
+      response.success();
+    });
+  }
+});
+
+
+
 Parse.Cloud.beforeSave("Concept", function(request, response) {
   if (request.object.get("text")) {
     request.object.set("textLowerCase", request.object.get("text").toLowerCase());

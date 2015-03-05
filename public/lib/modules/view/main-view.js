@@ -12,7 +12,16 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
     event.listen(event.conceptUpdateEvent, function(e, d) {
       root = d;
-      updateConcept();
+      if(g) {
+        g.transition().duration(500)
+          .style('opacity', 0);
+
+        setTimeout(function(){ updateConcept(); }, 500);
+
+      }else{ //first time render
+        updateConcept();
+      }  
+      
     });
 
     event.listen(event.modelUpdateEvent, function(e, d) { 
@@ -31,10 +40,33 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
     });
 
+    event.listen(event.showCloudEvent, function(e, d) {
+      if(g) {
+        g.transition().duration(500)
+          .style('opacity', 0);
+
+        setTimeout(function(){ 
+          hideSunburst();
+          reloadCloud();
+          showCloud();
+        }, 500);
+      } else {
+        hideSunburst();
+        reloadCloud();
+        showCloud();
+      }
+      
+      
+    });
+
+    event.listen(event.showSunburstEvent, function(e, d) {
+      hideCloud();
+      setTimeout(function(){ showSunburst();}, 500);
+    })
+
     $("body").load("/lib/modules/template/main-view.html", function() {
       hideSunburst();
-      loadCloud("course", ".main-left-panel");
-      loadCloud("concept", ".main-right-panel");
+      reloadCloud();
       controller.init();
     });
     
@@ -67,6 +99,12 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     // Keep track of the node that is currently being displayed as the root.
     var node;
 
+    function reloadCloud() {
+      $(".cloud").remove();
+      loadCloud("course", ".main-left-panel");
+      loadCloud("concept", ".main-right-panel");
+    }
+
     function loadCloud(group, position) {
 
       // TEST DEBUG
@@ -80,7 +118,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
             d3.layout.cloud().size([width, height])
                 .words(activities.map(function(d) {
-                  return {text: d.keyword, group: d.group, size: Math.sqrt(d.value * 1000)};
+                  return {text: d.keyword, group: d.group, size: Math.sqrt(d.value * 500)};
                 }))
                 .padding(5)
                 .rotate(function() { return ~~(Math.random() * 2) * 90; })
@@ -90,7 +128,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
                 .start();
 
             function draw(words) {
-              d3.select(position).append("svg")
+              var tags = d3.select(position).append("svg")
                   .attr("class", "cloud")
                   .attr("width", width)
                   .attr("height", height)
@@ -99,6 +137,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
                 .selectAll("text")
                   .data(words)
                 .enter().append("text")
+                  .style("opacity", 0)
                   .style("font-size", function(d) { return d.size + "px"; })
                   .style("font-family", "Impact")
                   .style("fill", function(d, i) { return fill(i); })
@@ -110,6 +149,9 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
                   .on("click", cloudClick)
                   .on("mouseover", cloudMouseOver)
                   .on("mouseleave", cloudMouseLeave);
+
+              tags.transition().duration(500)
+                .style("opacity", 1);
             }
 
             function cloudMouseOver(d) {
@@ -122,14 +164,19 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
 
             function cloudClick(d) {
-              hideCloud();
-              showSunburst();
+              
               if (d.group=="course") {
                 service.putActivity(d.text, 'popular', 'course');
-                model.addCourse(d.text);
+                model.addCourse(d.text).then(function() {
+                  hideCloud();
+                  setTimeout(function(){ showSunburst();}, 500);
+                });
               } else if (d.group=="concept") {
                 service.putActivity(d.text, 'popular', 'concept');
-                model.addConcept(d.text);
+                model.addConcept(d.text).then(function() {
+                  hideCloud();
+                  setTimeout(function(){ showSunburst();}, 500);
+                });
               }
             }
         }
@@ -138,7 +185,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     }
 
     function updateConcept() {
-      d3.select("svg").remove();
+      d3.select(".main-graph").remove();
       width = $('.graph-container').width();
       height = $('.graph-container').height();
       radius = Math.min(width, height) / 2;
@@ -249,7 +296,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     }
 
     function updateCourse() {
-      d3.select("svg").remove();
+      d3.select(".main-graph").remove();
       width = $('.graph-container').width();
       height = $('.graph-container').height();
       radius = Math.min(width, height) / 2;
@@ -404,16 +451,22 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     $(".graph-container").hide();
     $(".details").hide();
     $(".more-info").hide();
+    $(".navigation-container").hide();
   }
 
   var showSunburst = function() {
     $(".graph-container").show();
     $(".details").show();
     $(".more-info").show();
+    $(".navigation-container").show();
   }
 
   var hideCloud = function() {
-    $(".cloud").hide();
+    
+    setTimeout(function(){ $(".cloud").hide(); }, 500);
+    d3.selectAll('.cloud').transition()
+      .duration(500)
+      .style('opacity', 0);
   }
 
   var showCloud = function() {
@@ -422,10 +475,6 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
 
   return {
-    init: init,
-    hideSunburst: hideSunburst,
-    showSunburst: showSunburst,
-    hideCloud: hideCloud,
-    showCloud: showCloud
+    init: init
   };
 });

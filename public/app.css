@@ -10,47 +10,30 @@
 }
 
 .segment text {
-  font: 12px helvetica;
+  font: 14px Arial;
   pointer-events: none;
 }
 
-
-.main-graph {
-  z-index: 100;
+.twitter-typeahead { 
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 100%; 
 }
 
-.main-left-panel {
-  height: 100%;
-}
-
-.main-right-panel {
-  height: 100%;
-}
-
-
-.twitter-typeahead { width: 100%; }
-
-/*.tt-dropdown-menu {
-  width: 100%;
-  background-color:rgba(255, 255, 255, 0.8)
-}*/
 
 .tt-input,
 .tt-hint {
-/*    width: 30%;
-    height: 30px;
-    padding: 8px 12px;*/
     width: 33%;
     margin-left: 33%;
     margin-right: 33%;
-    font-size: 24px;
+    font-size: 20px;
     line-height: 30px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     outline: none;
 }
 
-.tt-input { /* UPDATE: newer versions use tt-input instead of tt-query */
+.tt-input {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
 
@@ -63,7 +46,6 @@
     margin-top: 12px;
     padding: 8px 0;
     background-color:rgba(255, 255, 255, 0.9);
-    /*background-color: #fff;*/
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 8px;
@@ -76,7 +58,7 @@
     line-height: 24px;
 }
 
-.tt-suggestion.tt-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
+.tt-suggestion.tt-cursor {
     color: #fff;
     background-color: #0097cf;
 
@@ -86,8 +68,26 @@
     margin: 0;
 }
 
+.top-panel .title{
+  position:absolute;
+  vertical-align: middle;
+  left: 20px;
+}
+
+.main-graph {
+  z-index: 100;
+}
+
+.main-left-panel {
+  height: 90%;
+}
+
+.main-right-panel {
+  height: 90%;
+}
+
 .graph-container {
-  height : 100%;
+  height : 80%;
   width: 100%;
   position: absolute;
   text-align: center;
@@ -95,14 +95,42 @@
 
 
 .details { 
+  font: 20px Arial;
   text-align: center;
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 40%;
+  transform: translateY(-40%);
 
   width: 50%;
   margin: 0 25%;
 }
 
 .more-info {
+  font: 20px Arial;
+  text-align: justify;
+}
+
+.row {
+  margin-right: 0px; 
+  margin-left: 0px; 
+}
+
+.navigation-container {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.home-button {
+  width: 30%;
+  font: 18px Arial;
+}
+
+.fineprint {
+  color: grey;
+  font: 14px Arial;
+  position: fixed;
+  top: 10px;
+  right: 10px;
 }

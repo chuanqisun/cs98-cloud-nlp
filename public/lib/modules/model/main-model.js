@@ -23,11 +23,11 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
 
     var promise = service.getCourse(course);
 
-    promise.then(function(results) {
+    return promise.then(function(results) {
       if (results.length > 0) {
         var node = new Node(results[0].get('code'), null, 'root', 1, 100, results[0].get('courseObj'));
         graph = node;
-        exploreCourse(node);
+        return exploreCourse(node);
       }    
     }, function(error) {
       alert("Error: " + error.code + " " + error.message);
@@ -37,7 +37,7 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
   var addConcept = function(concept) {
     var node = new Node(concept, null, 'root', 1, 100, null);
     graph = node;
-    exploreConcept(node);
+    return exploreConcept(node);
   }
 
   var initRoot = function(rootNode) {
@@ -58,16 +58,18 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     var p1 = getRelatedConceptsFromCourse(courseNode);
     var p2 = getRelatedCoursesFromCourse(courseNode)
 
-    Parse.Promise.when([p1, p2]).then(function(){
+    return Parse.Promise.when([p1, p2]).then(function(){
       event.emit(event.modelUpdateEvent, courseNode);
+      return Parse.Promise.as();
     });
   }
 
   var exploreConcept = function(conceptNode) {
     var promise = getRelatedCoursesFromConcept(conceptNode);
 
-    promise.then(function(){
+    return promise.then(function(){
       event.emit(event.conceptUpdateEvent, conceptNode);
+      return Parse.Promise.as();
     })
   }
 

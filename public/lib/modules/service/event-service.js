@@ -2,6 +2,9 @@ define(['jquery'], function() {
   var modelUpdateEvent = "model-update-event";
   var conceptUpdateEvent = "concept-update-event";
   var dataOnloadEvent = "data-onload-event";
+  var showCloudEvent = "show-cloud-event";
+  var showSunburstEvent = "show-sunburst-event";
+
 
   var emit = function(event, data) {
     $('body').trigger(event, data);
@@ -16,6 +19,8 @@ define(['jquery'], function() {
     listen: listen,
     modelUpdateEvent: modelUpdateEvent,
     conceptUpdateEvent: conceptUpdateEvent,
-    dataOnloadEvent: dataOnloadEvent
+    dataOnloadEvent: dataOnloadEvent,
+    showCloudEvent: showCloudEvent,
+    showSunburstEvent: showSunburstEvent
   };
 });

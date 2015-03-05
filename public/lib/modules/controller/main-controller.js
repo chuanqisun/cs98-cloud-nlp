@@ -1,5 +1,9 @@
-define(['require', 'jquery', 'model', 'service', 'autocomplete', ], function(require, jQuery, model, service, autocomplete) {
+define(['jquery', 'model', 'service', 'autocomplete', 'event'], function(jQuery, model, service, autocomplete, event) {
   var init = function() {
+
+    $( ".home-button" ).bind( "click", function() {
+      event.emit(event.showCloudEvent);
+    });
   
     $('.typeahead').typeahead({
       hint: true,
@@ -30,9 +34,8 @@ define(['require', 'jquery', 'model', 'service', 'autocomplete', ], function(req
         header: '<h3 class="search-result-concept">Concept</h3>'
       }
     }).on('typeahead:selected', function (obj, datum) {
-      view = require('view');
-      view.hideCloud();
-      view.showSunburst();
+      event.emit(event.showSunburstEvent);
+
       if(datum.obj===null) {
 
         service.putActivity(datum.value, 'search', 'concept');

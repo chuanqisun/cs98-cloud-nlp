@@ -17,6 +17,39 @@ var app = new Parse(APP_ID, MASTER_KEY);
 // ===================================
 // Task: upload prerequisite to Parse
 // ===================================
+// Dirty formats CHIN 53, WGST 96
+//
+//
+//
+
+
+var courses = require('./data/course_new').data;
+
+for (var i = 2000; i < courses.length; i++) {
+  var c = courses[i];
+  var toCode = c.code;
+  var prereq = c.prerequisites;
+
+  recursiveUploadPrerequiste(0, prereq, toCode);
+  
+}
+
+function recursiveUploadPrerequiste(i, array, toCode) {
+  if (i === array.length) {
+    return;
+  } else {
+    if (array[i] == toCode) {
+      recursiveUploadPrerequiste(i+1, array, toCode);
+    } else {
+      app.insert('Prerequisite', {fromCode: array[i], toCode: toCode}, function (err, response) {
+        err && console.log(err);
+        console.dir(response);
+        recursiveUploadPrerequiste(i+1, array, toCode);
+      });
+    }
+  }
+}
+
 // var prerequisite = require('./data/prerequisite').prerequisite;
 
 // totalNumPrerequisites =  prerequisite.length;
@@ -41,13 +74,14 @@ var app = new Parse(APP_ID, MASTER_KEY);
 // Task: upload courses to Parse
 // Bottle neck: Parse. 
 // ===================================
-var courses = require('./data/course_test').data;
+// var courses = require('./data/course_new').data;
 
-for (var i = 0; i < courses.length; i++) {
-  c = courses[i];
-  app.insert('Course2', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered, prerequisite: c.prerequisites}, function (err, response) {
-  });
-}
+// for (var i = 2000; i < courses.length; i++) {
+//   var c = courses[i];
+//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered, prerequisite: c.prerequisites}, function (err, response) {
+//     console.dir(response);  
+//   });
+// }
 
 
 // for (var i = 0; i < 1000; i++) {

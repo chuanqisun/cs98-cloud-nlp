@@ -72,23 +72,31 @@ Parse.Cloud.beforeSave("UserActivity", function(request, response) {
 Parse.Cloud.beforeSave("Prerequisite", function(request, response) {
     var fromCode = request.object.get("fromCode");
     var toCode = request.object.get("toCode");
-    var Course = Parse.Object.extend("Course");
-    var query1 = new Parse.Query(Course);
-    var query2 = new Parse.Query(Course);
-    query1.equalTo('code', fromCode);
-    query2.equalTo('code', toCode);
-    
-    var promise1 = query1.find().then(function(innerResult){
-      request.object.set("fromCourseObject", innerResult[0]);
-    });
 
-    var promise2= query2.find().then(function(innerResult){
-      request.object.set("toCourseObject", innerResult[0]);
-    });
+    // prevent loop
+    if (fromCode == toCode) {
+      resonse.error("loop");
+      
+    } else {
 
-    Parse.Promise.when([promise1, promise2]).then(function(){
-      response.success();
-    })
+      var Course = Parse.Object.extend("Course");
+      var query1 = new Parse.Query(Course);
+      var query2 = new Parse.Query(Course);
+      query1.equalTo('code', fromCode);
+      query2.equalTo('code', toCode);
+      
+      var promise1 = query1.find().then(function(innerResult){
+        request.object.set("fromCourseObject", innerResult[0]);
+      });
+
+      var promise2= query2.find().then(function(innerResult){
+        request.object.set("toCourseObject", innerResult[0]);
+      });
+
+      Parse.Promise.when([promise1, promise2]).then(function(){
+        response.success();
+      })
+    }
 });
 
 

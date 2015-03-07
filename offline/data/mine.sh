@@ -6,7 +6,7 @@
 touch outtemp.txt
 rm outtemp.txt
 
-headcut=http://dartmouth.smartcatalogiq.com/
+headcut=http://dartmouth.smartcatalogiq.com
 for line in `cat ./base_urls`; do
 	curl -s $line > temp.html
 	pattern=`echo $line | cut -d '/' -f4-` # cut leading characters

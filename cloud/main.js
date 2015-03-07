@@ -11,7 +11,7 @@ Parse.Cloud.define("getMostViewed", function(request, response) {
   var time = (1 * 24 * 3600 * 1000); // one day's time
   var startDate = new Date(d.getTime() - (time));
 
-  query.equalTo('group', group)
+  query.equalTo('group', group);
   query.greaterThanOrEqualTo( "createdAt", startDate);
   query.descending("createdAt");
   query.limit(1000)
@@ -69,6 +69,27 @@ Parse.Cloud.beforeSave("UserActivity", function(request, response) {
   }
 });
 
+Parse.Cloud.beforeSave("Prerequisite", function(request, response) {
+    var fromCode = request.object.get("fromCode");
+    var toCode = request.object.get("toCode");
+    var Course = Parse.Object.extend("Course");
+    var query1 = new Parse.Query(Course);
+    var query2 = new Parse.Query(Course);
+    query1.equalTo('code', fromCode);
+    query2.equalTo('code', toCode);
+    
+    var promise1 = query1.find().then(function(innerResult){
+      request.object.set("fromCourseObject", innerResult[0]);
+    });
+
+    var promise2= query2.find().then(function(innerResult){
+      request.object.set("toCourseObject", innerResult[0]);
+    });
+
+    Parse.Promise.when([promise1, promise2]).then(function(){
+      response.success();
+    })
+});
 
 
 Parse.Cloud.beforeSave("Concept", function(request, response) {

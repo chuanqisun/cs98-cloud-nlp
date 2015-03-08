@@ -123,8 +123,11 @@
   margin-bottom: 10px;
 }
 
-
 .more-info .instructor{
+  margin-bottom: 10px;
+}
+
+.more-info .prerequisitestext{
   margin-bottom: 10px;
 }
 

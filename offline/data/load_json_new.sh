@@ -1,8 +1,17 @@
 #!/bin/sh
 
+#!!!!!!!!!!!!!!!!!!!!!!!!! before upload to parse, manually correct
 # PBPL 49 has title issue
 # ENGL 53 has title issue
 # COLT 7 has title issue
+# ENVS 16 has title issue
+# GEOG 9 has title issue
+# Make sure M&SS class title is intact
+
+# PHYS 42 has title issue
+# PHYS 90 has title issue
+
+# WGST 96 has prereq issue
 
 ####################################################
 # use course urls to download content into a json file
@@ -38,9 +47,13 @@ for line in `cat ./urls.txt`; do
   hxselect '#main' -c < temp.html | grep "Distributive and/or World Culture" -A 100 | grep -o -P '(?<=</h3>).*(?=<div id="offered")' | tr -d '\012\015' >> $output
   echo -n "'," >> $output
 
+  echo -n "\"prerequisitestext\": '" >> $output
+  hxselect '#main' -c < temp.html | grep "Prerequisite" -A 100 | grep -o -P '(?<=</h3>).*(?=<h3>)' -m 1 | html2text | sed s/\'/\\\\\'/g | sed -e 's/^[ \t]*//' | tr -d '\012\015' >> $output
+  echo -n "'," >> $output
+
   echo -n "\"prerequisites\": " >> $output
   echo -n "[" >> $output
-  hxselect '#main' -c < temp.html | grep  "Prerequisite" -A 100 | grep -oP "<a.*" | hxselect -c 'a' -s '\n' > prereq.temp
+  hxselect '#main' -c < temp.html | grep "Prerequisite" -A 100 | grep -oP "<a.*" | hxselect -c 'a' -s '\n' > prereq.temp
   linecount=`wc -l < prereq.temp`
   currentline=0
   while read innerline; do

@@ -8,10 +8,45 @@ var app = new Parse(APP_ID, MASTER_KEY);
 
 
 // var fs = require('fs');
-var AlchemyAPI = require('alchemy_mini');
+//var AlchemyAPI = require('alchemy_mini');
 //var alchemyapi = new AlchemyAPI('9cb0f3b96861912dea72ef3ba3b358d98722da43'); // 2015/1/19 11:21PM gmail
 //var alchemyapi = new AlchemyAPI('1683a8e86a10e7a193da6560d095fc158c9d0728'); // 2015/1/20 7:00AM qq
 //var alchemyapi = new AlchemyAPI('27d5c2aa18afd3f580eaf54a6099474ac00308ea'); //  2015/1/20 8:20AM yahoo
+
+// ===================================
+// Task: update courses to include prerequist
+// ===================================
+var courses = require('./data/course_new').data;
+
+
+
+var start = 1495;
+var packsize = 1000;
+
+recursiveUploadPrerequisteText(start, start+packsize);
+
+function recursiveUploadPrerequisteText(i, limit) {
+  if (i===limit) {
+    return;
+  } else {
+    var c = courses[i];
+    var code = c.code;
+    var prerequisitestext = c.prerequisitestext;
+    console.dir(encodeURI(code));
+    app.findMany('Course', { code: encodeURIComponent(code) }, function (err, response) {
+      err && console.log(err);
+      console.dir("[" + i + "][" + response.results[0].code + "]");
+
+      app.update('Course', response.results[0].objectId, {prerequisitestext: prerequisitestext}, function (err, response) {
+        err && console.log(err);
+      });
+      recursiveUploadPrerequisteText(i + 1, limit);
+    });
+  }
+}
+
+
+
 
 
 // ===================================
@@ -78,29 +113,13 @@ var AlchemyAPI = require('alchemy_mini');
 
 // for (var i = 2000; i < courses.length; i++) {
 //   var c = courses[i];
-//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered, prerequisite: c.prerequisites}, function (err, response) {
+//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered, prerequisitestext: c.prerequisitestext, prerequisite: c.prerequisites}, function (err, response) {
 //     console.dir(response);  
 //   });
 // }
 
 
-// for (var i = 0; i < 1000; i++) {
-//   c = courses[i];
-//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered}, function (err, response) {
-//   });
-// }
 
-// for (var i = 1000; i < 2000; i++) {
-//   c = courses[i];
-//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered}, function (err, response) {
-//   });
-// }
-
-// for (var i = 2000; i < courses.length; i++) {
-//   c = courses[i];
-//   app.insert('Course', {code: c.code, url: c.url, description: c.description, title: c.title, instructor: c.instructor ,distribution: c.distribution, offered: c.offered}, function (err, response) {
-//   });
-// }
 
 // ===================================
 // Task: upload taxonomy to Parse

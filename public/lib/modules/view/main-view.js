@@ -273,9 +273,10 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
           $(".more-info").empty();
           $(".more-info").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
           $(".more-info").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
           $(".more-info").append("<div class='description'>" + d.moreInfo.get('description') + "</div>");
           $(".more-info").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
-          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
+          $(".more-info").append("<div class='prerequisitestext'>" + d.moreInfo.get('prerequisitestext') + "</div>");
           $(".more-info").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
           $(".details").empty();
           $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
@@ -366,9 +367,10 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
         $(".more-info").empty();
         $(".more-info").append("<div class='title'>" + root.moreInfo.get('title') + "</div>");
         $(".more-info").append("<div class='code'>" + root.moreInfo.get('code') + "</div>");
+        $(".more-info").append("<div class='offered'>" + root.moreInfo.get('offered') + "</div>");
         $(".more-info").append("<div class='description'>" + root.moreInfo.get('description') + "</div>");
         $(".more-info").append("<div class='instructor'>" + root.moreInfo.get('instructor') + "</div>");
-        $(".more-info").append("<div class='offered'>" + root.moreInfo.get('offered') + "</div>");
+        $(".more-info").append("<div class='prerequisitestext'>" + root.moreInfo.get('prerequisitestext') + "</div>");
         $(".more-info").append("<div class='distribution'>" + root.moreInfo.get('distribution') + "</div>");
         $(".details").empty();
         $(".details").append("<div class='code'>" + root.moreInfo.get('code') + "</div>");
@@ -392,9 +394,10 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
           $(".more-info").empty();
           $(".more-info").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
           $(".more-info").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
           $(".more-info").append("<div class='description'>" + d.moreInfo.get('description') + "</div>");
           $(".more-info").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
-          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
+          $(".more-info").append("<div class='prerequisitestext'>" + d.moreInfo.get('prerequisitestext') + "</div>");
           $(".more-info").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
           $(".details").empty();
           $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");

@@ -42,6 +42,22 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     return query.find();
   }
 
+  var getPrerequisitesForCourse = function(courseCode) {
+    var Prerequisite = Parse.Object.extend("Prerequisite");
+    var query = new Parse.Query(Prerequisite);
+    query.equalTo("toCode", courseCode);
+    query.include("fromCourseObject");
+    return query.find();
+  }
+
+  var getNextstepsForCourse = function(courseCode) {
+    var Prerequisite = Parse.Object.extend("Prerequisite");
+    var query = new Parse.Query(Prerequisite);
+    query.equalTo("fromCode", courseCode);
+    query.include("toCourseObject");
+    return query.find();
+  }
+
   var getConceptsForCourse = function(courseCode) {
     var Concept = Parse.Object.extend("Concept");
     var query = new Parse.Query(Concept);
@@ -85,6 +101,8 @@ define(['parse', 'config', 'event'], function(parse, config, event) {
     getCourse: getCourse,
     getConceptsForCourse: getConceptsForCourse,
     getCoursesForConcept: getCoursesForConcept,
+    getPrerequisitesForCourse: getPrerequisitesForCourse,
+    getNextstepsForCourse: getNextstepsForCourse,
     getConcepts: getConcepts,
     putActivity: putActivity
   };

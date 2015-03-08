@@ -112,7 +112,6 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
         success: function(activities) {
           width = $(position).width();
           height = $(position).height();
-          console.dir(activities);
 
           var fill = d3.scale.category20();
 
@@ -271,12 +270,15 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
         }
 
         if (d.depth === 1 && d.group === "related") {
-          $(".more-info").text(d.moreInfo.get('description'));
+          $(".more-info").empty();
+          $(".more-info").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
+          $(".more-info").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".more-info").append("<div class='description'>" + d.moreInfo.get('description') + "</div>");
+          $(".more-info").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
+          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
+          $(".more-info").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
           $(".details").empty();
           $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
-          $(".details").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
-          $(".details").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
-          $(".details").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
         }
 
         if (d.depth === 2 && d.group === "topics") {
@@ -285,7 +287,6 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       }
 
       function click(d) {
-
         if(!d.children) {
           if (d.group === "related") {
             model.exploreCourse(d);
@@ -362,12 +363,15 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       // Restore everything to full opacity when moving off the visualization.
       function mouseleave(d) {
         g.filter(filterNonRoot).style("opacity", 1);
-        $(".more-info").text(root.moreInfo.get('description'));
+        $(".more-info").empty();
+        $(".more-info").append("<div class='title'>" + root.moreInfo.get('title') + "</div>");
+        $(".more-info").append("<div class='code'>" + root.moreInfo.get('code') + "</div>");
+        $(".more-info").append("<div class='description'>" + root.moreInfo.get('description') + "</div>");
+        $(".more-info").append("<div class='instructor'>" + root.moreInfo.get('instructor') + "</div>");
+        $(".more-info").append("<div class='offered'>" + root.moreInfo.get('offered') + "</div>");
+        $(".more-info").append("<div class='distribution'>" + root.moreInfo.get('distribution') + "</div>");
         $(".details").empty();
         $(".details").append("<div class='code'>" + root.moreInfo.get('code') + "</div>");
-        $(".details").append("<div class='title'>" + root.moreInfo.get('title') + "</div>");
-        $(".details").append("<div class='instructor'>" + root.moreInfo.get('instructor') + "</div>");
-        $(".details").append("<div class='distribution'>" + root.moreInfo.get('distribution') + "</div>");
       }
 
       function mouseover(d) {
@@ -384,13 +388,16 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
             .style("opacity", 1);
         }
 
-        if (d.depth === 2 && d.group === "related") {
-          $(".more-info").text(d.moreInfo.get('description'));
+        if (d.depth === 2 && (d.group === "related" || d.group === "prerequisite" || d.group === "nextSteps")) {
+          $(".more-info").empty();
+          $(".more-info").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
+          $(".more-info").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
+          $(".more-info").append("<div class='description'>" + d.moreInfo.get('description') + "</div>");
+          $(".more-info").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
+          $(".more-info").append("<div class='offered'>" + d.moreInfo.get('offered') + "</div>");
+          $(".more-info").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
           $(".details").empty();
           $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
-          $(".details").append("<div class='title'>" + d.moreInfo.get('title') + "</div>");
-          $(".details").append("<div class='instructor'>" + d.moreInfo.get('instructor') + "</div>");
-          $(".details").append("<div class='distribution'>" + d.moreInfo.get('distribution') + "</div>");
         }
 
         if (d.depth === 1) {
@@ -405,7 +412,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       function click(d) {
 
         if(!d.children) {
-          if (d.group === "related") {
+          if (d.group === "related" || d.group === "prerequisite" || d.group === "nextSteps") {
             model.exploreCourse(d);
             service.putActivity(d.moreInfo.get('code'), 'explore', 'course');
           } else if (d.group === "topics") {

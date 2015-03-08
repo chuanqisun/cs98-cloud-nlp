@@ -56,9 +56,11 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
     }
 
     var p1 = getRelatedConceptsFromCourse(courseNode);
-    var p2 = getRelatedCoursesFromCourse(courseNode)
+    var p2 = getRelatedCoursesFromCourse(courseNode);
+    var p3 = getPrerequisitesFromCourse(courseNode);
+    var p4 = getNextstepsFromCourse(courseNode);
 
-    return Parse.Promise.when([p1, p2]).then(function(){
+    return Parse.Promise.when([p1, p2, p3, p4]).then(function(){
       event.emit(event.modelUpdateEvent, courseNode);
       return Parse.Promise.as();
     });
@@ -112,6 +114,36 @@ define(['service', 'event', 'config', 'cosine'], function(service, event, config
       for (var i = 0; i < results.length; i++) {
         var child = new Node(results[i].get('code'), null, 'related', results[i].get('relevance'), 100.0 / results.length, results[i].get('courseObj'));
         conceptNode.children.push(child);
+      }
+      return Parse.Promise.as();
+    }, function(error) {
+      alert("Error: " + error.code + " " + error.message);
+    });
+
+    return promise;
+  }
+
+  var getPrerequisitesFromCourse = function(courseNode) {
+    var promise = service.getPrerequisitesForCourse(courseNode.name).then(function(results) {
+      courseNode.children[0].children = [];
+      for (var i = 0; i < results.length; i++) {
+        var child = new Node(results[i].get('fromCode'), null, 'prerequisite', 1, 25.0 / results.length, results[i].get('fromCourseObject'));
+        courseNode.children[0].children.push(child);
+      }
+      return Parse.Promise.as();
+    }, function(error) {
+      alert("Error: " + error.code + " " + error.message);
+    });
+
+    return promise;
+  }
+
+  var getNextstepsFromCourse = function(courseNode) {
+    var promise = service.getNextstepsForCourse(courseNode.name).then(function(results) {
+      courseNode.children[1].children = [];
+      for (var i = 0; i < results.length; i++) {
+        var child = new Node(results[i].get('toCode'), null, 'nextSteps', 1, 25.0 / results.length, results[i].get('toCourseObject'));
+        courseNode.children[1].children.push(child);
       }
       return Parse.Promise.as();
     }, function(error) {

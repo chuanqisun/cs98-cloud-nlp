@@ -106,9 +106,33 @@
 }
 
 .more-info {
-  font: 20px Arial;
-  text-align: justify;
+  font: 18px Arial;
 }
+
+.more-info .title{
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.more-info .code{
+  margin-bottom: 10px;
+}
+
+
+.more-info .description{
+  margin-bottom: 10px;
+}
+
+
+.more-info .instructor{
+  margin-bottom: 10px;
+}
+
+.more-info .offered{
+  margin-bottom: 10px;
+}
+
+
 
 .row {
   margin-right: 0px; 

@@ -105,7 +105,14 @@ Parse.Cloud.beforeSave("Concept", function(request, response) {
     request.object.set("textLowerCase", request.object.get("text").toLowerCase());
   }
 
-  response.success();
+  // save related obj
+  var Course = Parse.Object.extend("Course");
+  var query = new Parse.Query(Course);
+  query.equalTo('code', request.object.get('code'));
+  query.find().then(function(result){
+    request.object.set("courseObj", result[0]);
+    response.success();
+  });  
 });
 
 Parse.Cloud.job("addLowercase_concept_names", function(request, status) {

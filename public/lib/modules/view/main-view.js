@@ -302,7 +302,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       width = $('.graph-container').width();
       height = $('.graph-container').height();
       radius = Math.min(width, height) / 2;
-      y = d3.scale.sqrt()
+      y = d3.scale.linear()
         .range([0, radius]);
       arc = d3.svg.arc()
         .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })

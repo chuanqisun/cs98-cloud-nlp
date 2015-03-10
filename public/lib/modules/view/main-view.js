@@ -2,10 +2,14 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
   var colors = {
     "root": "#ffffff",
-    "prerequisite": "#5687d1",
-    "nextSteps": "#7b615c",
-    "topics": "#6ab975",
-    "related": "#a173d1"
+    // "prerequisite": "#5687d1",
+    // "nextSteps": "#7b615c",
+    // "topics": "#6ab975",
+    // "related": "#a173d1"
+    "prerequisite": "#6baed6",
+    "nextSteps": "#fd8d3c",
+    "topics": "#74c476",
+    "related": "#9e9ac8"
   };
 
   var init = function() {
@@ -186,8 +190,8 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     function updateConcept() {
       d3.select(".main-graph").remove();
       width = $('.graph-container').width();
-      height = $('.graph-container').height();
-      radius = Math.min(width, height) / 2;
+      height = $('.graph-container').height() * config.sunburstVerticalBufferRatio;
+      radius = Math.min(width, height) / config.sunburstSizedownRatio;
       y = d3.scale.sqrt()
         .range([0, radius]);
       arc = d3.svg.arc()
@@ -227,8 +231,9 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
              
       text = g.append("text")
         .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-        .attr("x", function(d) { return y(d.y); })
-        .attr("dx", "6") // margin
+        .attr('text-anchor', function (d) { return (computeTextSide(d) > 0)? "start" : "end"; })
+        .attr("x", function(d) { return (computeTextSide(d) > 0)? y(d.y): -y(d.y) })
+        .attr("dx", function(d) { return (computeTextSide(d) > 0)? "6" : "-6";}) // margin
         .attr("dy", ".35em") // vertical-align
         .text(function(d) { 
           if (d.depth) {
@@ -281,14 +286,10 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
           $(".details").empty();
           $(".details").append("<div class='code'>" + d.moreInfo.get('code') + "</div>");
         }
-
-        if (d.depth === 2 && d.group === "topics") {
-          $(".details").html("<div class='topic'>" + d.name + "</div>");
-        }
       }
 
       function click(d) {
-        if(!d.children) {
+        if(d.depth === 1) {
           if (d.group === "related") {
             model.exploreCourse(d);
             service.putActivity(d.moreInfo.get('code'), 'explore', 'course');
@@ -300,8 +301,8 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
     function updateCourse() {
       d3.select(".main-graph").remove();
       width = $('.graph-container').width();
-      height = $('.graph-container').height();
-      radius = Math.min(width, height) / 2;
+      height = $('.graph-container').height() * config.sunburstVerticalBufferRatio;
+      radius = Math.min(width, height) / config.sunburstSizedownRatio;
       y = d3.scale.linear()
         .range([0, radius]);
       arc = d3.svg.arc()
@@ -338,11 +339,12 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       $(".right-panel").offset($(".segment")[0].getBoundingClientRect());
 
       mouseleave(root);
-             
+            
       text = g.append("text")
         .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-        .attr("x", function(d) { return y(d.y); })
-        .attr("dx", "6") // margin
+        .attr('text-anchor', function (d) { return (computeTextSide(d) > 0)? "start" : "end"; })
+        .attr("x", function(d) { return (computeTextSide(d) > 0)? y(d.y): -y(d.y) })
+        .attr("dx", function(d) { return (computeTextSide(d) > 0)? "6" : "-6";}) // margin
         .attr("dy", ".35em") // vertical-align
         .text(function(d) { 
           if (d.depth) {
@@ -351,6 +353,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
             return "";
           } 
         });
+
 
       g.filter(filterNonRoot).transition().duration(500)
            .style('opacity', 1);
@@ -414,7 +417,7 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
       function click(d) {
 
-        if(!d.children) {
+        if(d.depth === 2) {
           if (d.group === "related" || d.group === "prerequisite" || d.group === "nextSteps") {
             model.exploreCourse(d);
             service.putActivity(d.moreInfo.get('code'), 'explore', 'course');
@@ -451,8 +454,17 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
       };
     }
 
+    // -1 left, 1 right
+    function computeTextSide(d) {
+      var ang = (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+      return (ang > 90) ? -1 : 1;  
+    }
+
     function computeTextRotation(d) {
-      return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+      // return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+
+      var ang = (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+      return (ang > 90) ? 180 + ang : ang;
     }
 
   };

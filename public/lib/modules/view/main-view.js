@@ -408,10 +408,29 @@ define(['jquery', 'd3', 'd3cloud', 'model', 'event', 'config', 'controller', 'se
 
         if (d.depth === 1) {
           $(".details").html("<div class='categorical'>" + d.name + "</div>");
+          if (d.name === "Related") {
+            $(".more-info").empty();
+            $(".more-info").append("<div class='title'>" + d.name + "</div>");  
+            $(".more-info").append("<div class='description'> These courses are related to " + root.name + ".</div>");
+          } else if (d.name === "Prerequisite") {
+            $(".more-info").empty();
+            $(".more-info").append("<div class='title'>" + d.name + "</div>");  
+            $(".more-info").append("<div class='description'> These courses will prepare you for " + root.name + ".</div>");
+          } else if (d.name === "Topics") {
+            $(".more-info").empty();
+            $(".more-info").append("<div class='title'>" + d.name + "</div>");  
+            $(".more-info").append("<div class='description'> These concepts will be covered in " + root.name + ".</div>");
+          } else if (d.name === "Next Steps") {
+            $(".more-info").empty();
+            $(".more-info").append("<div class='title'>" + d.name + "</div>");  
+            $(".more-info").append("<div class='description'>" + root.name + " prepares you for these courses.</div>");
+          }
         }
 
         if (d.depth === 2 && d.group === "topics") {
           $(".details").html("<div class='topic'>" + d.name + "</div>");
+          $(".more-info").empty();
+          $(".more-info").append("<div class='title'>" + d.name + "</div>");
         }
       }
 
